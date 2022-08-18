@@ -44,7 +44,7 @@ async function main() {
             return
         }
 
-        if (collect) {
+        if (collect /*&& eventLine['positionX']*/) {
             out.push(eventLine)
             return
         }

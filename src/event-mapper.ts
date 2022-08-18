@@ -214,16 +214,31 @@ export class EventMapper {
         }
 
         if (event == EVENTS.EMOTE) {
-            assertArgLen(args, 7)
+
+            // TODO: You can get commas inline in the text without an escape
+            // sequence around it:
+            //
+            // 8/18
+            // 19:35:55.758,EMOTE,Creature-0-3893-2481-14644-183533-00007E7769,"Genesis
+            // Relic",0000000000000000,nil,|TInterface\\ICONS\\Spell_Broker_GroundState.BLP:20|t
+            // The Relic comes to life as Xy'mox channels into it,
+            // emanating Genesis Rings!
+
+            // assertArgLen(args, 7)
+
+            // return {
+            //     timestamp: args[0],
+            //     event: args[1],
+            //     sourceGuid: args[2],
+            //     sourceName: args[3],
+            //     destGuid: args[4],
+            //     destName: args[5],
+            //     text: args[6],
+            // }
 
             return {
                 timestamp: args[0],
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                destGuid: args[4],
-                destName: args[5],
-                text: args[6],
+                event: args[1]
             }
         }
 
@@ -376,9 +391,18 @@ export class EventMapper {
             }
 
             if (event == EVENTS.SWING_MISSED) {
-                assertArgLen(args, 12, 15)
+                assertArgLen(args, 12, 13, 15)
 
                 if (args.length == 12) {
+                    return {
+                        ...data,
+
+                        missType: args[10],
+                        isOffHand: args[11],
+                    }
+                }
+
+                if (args.length == 13) {
                     return {
                         ...data,
 
@@ -634,7 +658,7 @@ export class EventMapper {
                 EVENTS.SPELL_PERIODIC_MISSED,
                 CUSTOM_EVENTS.C_DAMAGE_SHIELD_MISSED)
             ) {
-                assertArgLen(args, 15, 18)
+                assertArgLen(args, 15, 16, 18)
 
                 if (args.length == 15) {
                     return {
@@ -642,6 +666,16 @@ export class EventMapper {
 
                         missType: args[13],
                         isOffHand: args[14],
+                    }
+                }
+
+                if (args.length == 16) {
+                    return {
+                        ...data,
+
+                        missType: args[13],
+                        isOffHand: args[14],
+                        amountMissed: args[15]
                     }
                 }
 
