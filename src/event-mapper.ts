@@ -1,3 +1,4 @@
+import { mapCombatantInfoArgs } from './combatant-info-mapper'
 import { eventMapperContext } from './event-mapper-context'
 import { LineArgs, ParserError, ParserErrors } from './log-parser'
 
@@ -67,7 +68,7 @@ export type EventLine = {
     date: string
     timestamp: string
     event: string
-    [arg: string]: string
+    [arg: string]: any
 }
 
 export class EventMapper {
@@ -148,6 +149,10 @@ export class EventMapper {
         }
 
         if (event == EVENTS.COMBATANT_INFO) {
+            assertArgLen(args, 35)
+
+            const combatantInfo = mapCombatantInfoArgs(args)
+
             return {
                 date: args[0],
                 timestamp: `${lineArgs.encounterTimeMs}`,
@@ -176,10 +181,10 @@ export class EventMapper {
                 versatilityDamageTaken: args[23],
                 armor: args[24],
                 specId: args[25],
-                talentInfo: args[26],
-                pvpTalentInfo: args[27], //do we really care
+                talentInfo: combatantInfo.talentInfo,
+                pvpTalentInfo: combatantInfo.pvpTalentInfo,
                 borrowedPowerInfo: args[28],
-                gearInfo: args[29],
+                gearInfo: combatantInfo.gearInfo,
                 interestingAuras: args[30],
             }
         }
