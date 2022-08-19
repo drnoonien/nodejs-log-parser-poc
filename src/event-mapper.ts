@@ -76,7 +76,6 @@ export class EventMapper {
         if (anyOf(lineArgs.event,
             EVENTS.EMOTE,
             EVENTS.SPELL_CAST_FAILED,
-            EVENTS.COMBATANT_INFO,
         )) {
             return undefined
         }
@@ -153,7 +152,31 @@ export class EventMapper {
                 date: args[0],
                 timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
-                nope: "nope",
+                sourceGuid: args[2],
+                faction: args[3],
+                strength: args[4],
+                agility: args[5],
+                stamina: args[6],
+                intellect: args[7],
+                dodge: args[8],
+                parry: args[9],
+                block: args[10],
+                critMelee: args[11],
+                critRanged: args[12],
+                critSpell: args[13],
+                speed: args[14],
+                leech: args[15],
+                hasteMelee: args[16],
+                hasteRanged: args[17],
+                hasteSpell: args[18],
+                avoidance: args[19],
+                mastery: args[20],
+                versatilityDamageDone: args[21],
+                versatilityHealingDone: args[22],
+                versatilityDamageTaken: args[23],
+                armor: args[24],
+                specId: args[25],
+
             }
         }
 
