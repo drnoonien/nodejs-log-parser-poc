@@ -176,7 +176,11 @@ export class EventMapper {
                 versatilityDamageTaken: args[23],
                 armor: args[24],
                 specId: args[25],
-
+                talentInfo: args[26],
+                pvpTalentInfo: args[27], //do we really care
+                borrowedPowerInfo: args[28],
+                gearInfo: args[29],
+                interestingAuras: args[30],
             }
         }
 

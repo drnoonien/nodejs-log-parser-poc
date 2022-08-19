@@ -171,6 +171,8 @@ export class LogParser {
         const parsedArgs = []
         let word = ""
         let inQuotes = false
+        let inParentheses = false
+        let blockParenthesesDepth = 0
 
         for (let index = 0; index < rawArgs.length; index++) {
             const char = rawArgs[index]
@@ -179,7 +181,21 @@ export class LogParser {
                 inQuotes = !inQuotes
             }
 
-            if (char == "," && !inQuotes) {
+            if (char == "(") {
+                inParentheses = true
+            }
+            if (char == ")") {
+                inParentheses = false
+            }
+
+            if (char == "[") {
+                blockParenthesesDepth += 1
+            }
+            if (char == "]") {
+                blockParenthesesDepth -= 1
+            }
+
+            if (char == "," && !inQuotes && !inParentheses && blockParenthesesDepth == 0) {
                 parsedArgs.push(word)
                 word = ""
             } else {
