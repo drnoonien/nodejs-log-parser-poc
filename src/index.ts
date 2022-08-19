@@ -78,7 +78,7 @@ function getOutPath(fileName: string) {
 
 function getFileName(eventLine: EventLine) {
     const name = eventLine.encounterName.replace(/\"/g, "")
-    const time = eventLine.timestamp.split(" ")[1].replace(/:/g, '_')
+    const time = eventLine.date.split(" ")[1].replace(/:/g, '_')
 
     return `${name} ${time}.json`
 }

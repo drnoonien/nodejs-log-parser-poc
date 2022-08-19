@@ -85,9 +85,11 @@ export class LogParser {
             }
 
             const lineParts = this.splitLine(line)
-            const event = eventMapper.map(lineParts)
+            const maybeEvent = eventMapper.filteredMap(lineParts)
 
-            forEach(event, reader)
+            if (maybeEvent) {
+                forEach(maybeEvent, reader)
+            }
         })
 
     }

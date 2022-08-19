@@ -64,12 +64,25 @@ export const EVENTS = {
 }
 
 export type EventLine = {
+    date: string
     timestamp: string
     event: string
     [arg: string]: string
 }
 
 export class EventMapper {
+
+    public filteredMap(lineArgs: LineArgs): EventLine | undefined {
+        if (anyOf(lineArgs.event,
+            EVENTS.EMOTE,
+            EVENTS.SPELL_CAST_FAILED,
+            EVENTS.COMBATANT_INFO,
+        )) {
+            return undefined
+        }
+
+        return this.map(lineArgs)
+    }
 
     public map(lineArgs: LineArgs): EventLine {
 
@@ -91,7 +104,8 @@ export class EventMapper {
 
             return {
                 // Base
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 sourceGuid: args[2],
                 sourceName: args[3],
@@ -113,7 +127,8 @@ export class EventMapper {
             assertArgLen(args, 6)
 
             return {
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 instanceId: args[2],
                 marker: args[3],
@@ -126,7 +141,8 @@ export class EventMapper {
             assertArgLen(args, 3)
 
             return {
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 marker: args[2]
             }
@@ -134,7 +150,8 @@ export class EventMapper {
 
         if (event == EVENTS.COMBATANT_INFO) {
             return {
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 nope: "nope",
             }
@@ -144,7 +161,8 @@ export class EventMapper {
             assertArgLen(args, 7)
 
             return {
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 encounterId: args[2],
                 encounterName: args[3],
@@ -158,7 +176,8 @@ export class EventMapper {
             assertArgLen(args, 8)
 
             return {
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 encounterId: args[2],
                 encounterName: args[3],
@@ -173,7 +192,8 @@ export class EventMapper {
             assertArgLen(args, 8)
 
             return {
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 uiMapId: args[2],
                 uiMapName: args[3],
@@ -188,7 +208,8 @@ export class EventMapper {
             assertArgLen(args, 5)
 
             return {
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 instanceId: args[2],
                 zoneName: args[3],
@@ -200,7 +221,8 @@ export class EventMapper {
             assertArgLen(args, 9)
 
             return {
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: "COMBAT_LOG_VERSION",
                 combatLogVersionKey: args[1],
                 combatLogVersionValue: args[2],
@@ -227,7 +249,8 @@ export class EventMapper {
             // assertArgLen(args, 7)
 
             // return {
-            //     timestamp: args[0],
+            //     date: args[0],
+            //     timestamp: `${lineArgs.encounterTimeMs}`,
             //     event: args[1],
             //     sourceGuid: args[2],
             //     sourceName: args[3],
@@ -237,7 +260,8 @@ export class EventMapper {
             // }
 
             return {
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1]
             }
         }
@@ -248,7 +272,8 @@ export class EventMapper {
 
             return {
                 // Base
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 sourceGuid: args[2],
                 sourceName: args[3],
@@ -290,7 +315,8 @@ export class EventMapper {
 
             return {
                 // Base
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 sourceGuid: args[2],
                 sourceName: args[3],
@@ -339,7 +365,8 @@ export class EventMapper {
         if (event.startsWith("SWING_")) {
             data = {
                 // Base
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 sourceGuid: args[2],
                 sourceName: args[3],
@@ -443,7 +470,8 @@ export class EventMapper {
 
             const base = {
                 // Base
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 sourceGuid: args[2],
                 sourceName: args[3],
@@ -504,7 +532,8 @@ export class EventMapper {
 
             data = {
                 // Base
-                timestamp: args[0],
+                date: args[0],
+                timestamp: `${lineArgs.encounterTimeMs}`,
                 event: args[1],
                 sourceGuid: args[2],
                 sourceName: args[3],
