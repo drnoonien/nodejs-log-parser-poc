@@ -22,8 +22,6 @@ async function main() {
 
     logParser.streamSync(filePath, (eventLine, _reader) => {
 
-        //TODO: Should maybe sort these as they come in so we dont
-        //store events for duplicate markers, this is fine for now.
         if (eventLine.event === EVENTS.WORLD_MARKER_PLACED) {
             worldMarkers.push(eventLine)
         }
