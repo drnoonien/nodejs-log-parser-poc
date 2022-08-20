@@ -1,5 +1,5 @@
 import { assertDefined } from './assert-utils'
-import { EventLine, EventMapper, EVENTS } from './event-mapper'
+import { EVENTS } from './event-mapper'
 import { eventMapperContext } from './event-mapper-context'
 import { NReadLinesReader, SyncLineReader } from './line-reader'
 import { WordBuilder } from './parser-utils'
@@ -60,12 +60,26 @@ export type LineArgs = {
     encounterTimeMs: number
 }
 
-export class LogParser {
+export class LogParser<P> {
 
     private syncReader: SyncLineReader
     private currentEncounterStartMs: number | null = null
 
-    constructor(reader?: SyncLineReader) {
+    private mapper: (lineArgs: LineArgs) => P | undefined
+
+    constructor({ reader, mapper }: {
+        /**
+         * Mapper implementation to convert the raw args into
+         * something more useful.
+         */
+        mapper: (lineArgs: LineArgs) => P | undefined
+        /**
+         * Custom reader implementation. Mostly for testing.
+         */
+        reader?: SyncLineReader
+    }) {
+        this.mapper = mapper
+
         if (reader) {
             this.syncReader = reader
         } else {
@@ -73,17 +87,15 @@ export class LogParser {
         }
     }
 
-    public streamSync(filePath: string, forEach: (event: EventLine, reader: any) => void) {
+    public streamSync(filePath: string, forEach: (payload: P, reader: any) => void) {
 
         this.syncReader.read(filePath, (line, lineNumber, reader) => {
-            const eventMapper = new EventMapper()
-
             if (lineNumber == 0) {
                 this.assertValidCombatLogVersion(line, VALID_COMBAT_LOG_VERSION)
             }
 
             const lineParts = this.splitLine(line)
-            const maybeEvent = eventMapper.filteredMap(lineParts)
+            const maybeEvent = this.mapper(lineParts)
 
             if (maybeEvent) {
                 forEach(maybeEvent, reader)

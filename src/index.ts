@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { EventLine, EVENTS } from './event-mapper'
+import { EventLine, EventMapper, EVENTS } from './event-mapper'
 import { LogParser } from './log-parser'
 
 const file = process.argv[2]
@@ -10,7 +10,12 @@ async function main() {
     const filePath = path.resolve(`${file}`)
     // const filePath = path.resolve(__dirname, `../logs/cn_chill_ev.txt`)
 
-    const logParser = new LogParser()
+    const eventMapper = new EventMapper()
+    const logParser = new LogParser<EventLine>({
+        mapper: (line) => {
+            return eventMapper.filteredMap(line)
+        }
+    })
     const out: EventLine[] = []
     let collect = false
     let worldMarkers: EventLine[] = []

@@ -5,7 +5,8 @@
     "prepare": "husky install",
     "test": "cross-env NODE_OPTIONS='--unhandled-rejections=strict' jest",
     "test:watch": "cross-env NODE_OPTIONS='--unhandled-rejections=strict' jest --watch",
-    "start": "cross-env NODE_OPTIONS='--unhandled-rejections=strict' ts-node ./src/index.ts"
+    "start": "cross-env NODE_OPTIONS='--unhandled-rejections=strict' ts-node ./src/index.ts",
+    "sniff": "cross-env NODE_OPTIONS='--unhandled-rejections=strict' ts-node ./src/index-sniffer.ts"
   },
   "license": "ISC",
   "dependencies": {
