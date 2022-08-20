@@ -13,8 +13,14 @@ async function main() {
     const logParser = new LogParser()
     const out: EventLine[] = []
     let collect = false
+    let worldMarkers: EventLine[] = []
 
     logParser.streamSync(filePath, (eventLine, _reader) => {
+
+        //TODO: Should maybe sort these as they come in so we dont store events for duplicate markers, this is fine for now.
+        if(eventLine.event === EVENTS.WORLD_MARKER_PLACED || eventLine.event === EVENTS.WORLD_MARKER_REMOVED) {
+            worldMarkers.push(eventLine)
+        }
 
         if (eventLine.event === EVENTS.ENCOUNTER_START) {
             console.log('Found encounter', eventLine)
@@ -24,8 +30,13 @@ async function main() {
                 console.log('Encounter already written to disk, skipping', fileName)
                 return
             }
+            
 
             out.push(eventLine)
+            console.log('Decorating log with world markers')
+            for(let index = 0; index < worldMarkers.length; index++) {
+                out.push(worldMarkers[index])
+            }
             collect = true
             return
         }
