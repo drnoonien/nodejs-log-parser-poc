@@ -1,7 +1,8 @@
 import { assertDefined } from './assert-utils'
 import { EventLine, EventMapper, EVENTS } from './event-mapper'
 import { eventMapperContext } from './event-mapper-context'
-import { AsyncLineReader, FileLineReader, NReadLinesReader, SyncLineReader } from './line-reader'
+import { NReadLinesReader, SyncLineReader } from './line-reader'
+import { WordBuilder } from './parser-utils'
 import { HH_MM_SS_SSStoMilli } from './time-utils'
 
 const VALID_COMBAT_LOG_VERSION = 19
@@ -62,17 +63,14 @@ export type LineArgs = {
 export class LogParser {
 
     private syncReader: SyncLineReader
-    private reader: AsyncLineReader
     private currentEncounterStartMs: number | null = null
 
-    constructor(reader?: AsyncLineReader) {
+    constructor(reader?: SyncLineReader) {
         if (reader) {
-            this.reader = reader
+            this.syncReader = reader
         } else {
-            this.reader = new FileLineReader()
+            this.syncReader = new NReadLinesReader()
         }
-
-        this.syncReader = new NReadLinesReader()
     }
 
     public streamSync(filePath: string, forEach: (event: EventLine, reader: any) => void) {
@@ -94,63 +92,6 @@ export class LogParser {
 
     }
 
-    public streamEvents(filePath: string, forEach: (event: EventLine) => void): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            const eventMapper = new EventMapper()
-
-            this.reader.on('line', (line: string, currLineIndex: number) => {
-                if (currLineIndex == 0) {
-                    this.assertValidCombatLogVersion(line, VALID_COMBAT_LOG_VERSION)
-                }
-
-                const lineParts = this.splitLine(line)
-                const event = eventMapper.map(lineParts)
-
-                forEach(event)
-            })
-
-            this.reader.on('close', () => {
-                resolve()
-            })
-
-            this.reader.on('error', (error: unknown) => {
-                reject(error)
-            })
-
-            this.reader.read(filePath)
-        })
-    }
-
-    public parseFile(filePath: string): Promise<EventLine[]> {
-        const result = new Promise<EventLine[]>((resolve, reject) => {
-            const output: any[] = []
-            const eventMapper = new EventMapper()
-
-            this.reader.on('line', (line: string, currLineIndex: number) => {
-                if (currLineIndex == 0) {
-                    this.assertValidCombatLogVersion(line, VALID_COMBAT_LOG_VERSION)
-                }
-
-                const lineParts = this.splitLine(line)
-                const event = eventMapper.map(lineParts)
-
-                output.push(event)
-            })
-
-            this.reader.on('close', () => {
-                resolve(output)
-            })
-
-            this.reader.on('error', (error: unknown) => {
-                reject(error)
-            })
-
-            this.reader.read(filePath)
-        })
-
-        return result
-    }
-
     private assertValidCombatLogVersion(line: string, version: number) {
         if (!line.includes(`COMBAT_LOG_VERSION,${version}`)) {
             throw new ParserError({
@@ -169,7 +110,8 @@ export class LogParser {
         const rawArgs = line.substring(line.indexOf("  ") + 2)
 
         const parsedArgs = []
-        let word = ""
+        const wordBuilder = WordBuilder()
+
         let inQuotes = false
         let inParentheses = false
         let blockParenthesesDepth = 0
@@ -196,16 +138,14 @@ export class LogParser {
             }
 
             if (char == "," && !inQuotes && !inParentheses && blockParenthesesDepth == 0) {
-                parsedArgs.push(word)
-                word = ""
+                parsedArgs.push(wordBuilder.flush())
             } else {
-                word += char
+                wordBuilder.push(char)
             }
 
             // Push last word
             if (index === rawArgs.length - 1) {
-                parsedArgs.push(word)
-                word = ""
+                parsedArgs.push(wordBuilder.flush())
             }
         }
 

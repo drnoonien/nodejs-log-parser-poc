@@ -1,12 +1,4 @@
-import linebyline from "linebyline"
-import nLineByLine from 'n-readlines'
-
-type EventType = "line" | "close" | "error"
-
-export interface AsyncLineReader {
-    on(event: EventType, callback: Function): void
-    read(filePath: string): void
-}
+import nReadLines from 'n-readlines'
 
 export interface SyncLineReader {
     read(filePath: string, forEach: (line: string, lineNumber: number, reader: any) => void): void
@@ -15,7 +7,7 @@ export interface SyncLineReader {
 export class NReadLinesReader implements SyncLineReader {
 
     read(filePath: string, forEach: (line: string, lineNumber: number, reader: any) => void): void {
-        const reader = new nLineByLine(filePath, {
+        const reader = new nReadLines(filePath, {
             // This is the default value, this lib cannot handle `\r\n`
             newLineCharacter: '\r'
         })
@@ -24,6 +16,8 @@ export class NReadLinesReader implements SyncLineReader {
         let lineNumber = 0
 
         while (line = reader.next()) {
+            // Notice we have to remove the linebreak manually, this
+            // lib can't split on two chars
             const thisLine = line.toString('utf8').replace(/\n/g, '')
 
             if (thisLine.length <= 0) {
@@ -37,59 +31,14 @@ export class NReadLinesReader implements SyncLineReader {
 
 }
 
-export class FileLineReader implements AsyncLineReader {
+export class MockedLineReader implements SyncLineReader {
 
-    private callbacks: { [key in EventType]: Function[] } = {
-        line: [],
-        close: [],
-        error: []
-    }
+    constructor(private lines: string[]) { }
 
-    public on(event: EventType, callback: Function) {
-        this.callbacks[event].push(callback)
-    }
-
-    public read(filePath: string) {
-        const lineTraverser = linebyline(filePath)
-
-        this.callbacks.line.forEach(cb => {
-            lineTraverser.on('line', (line: string, currentLineIndex: number) => {
-                // Roll back to a proper zero-index
-                cb(line, currentLineIndex - 1)
-            })
-        })
-        this.callbacks.close.forEach(cb => {
-            lineTraverser.on('close', cb)
-        })
-        this.callbacks.error.forEach(cb => {
-            lineTraverser.on('error', cb)
-        })
-    }
-
-}
-
-export class MockedLineReader implements AsyncLineReader {
-
-    private callbacks: { [key in EventType]: Function[] } = {
-        line: [],
-        close: [],
-        error: []
-    }
-
-    constructor(private lines: string[]) {
-
-    }
-
-    public on(event: EventType, callback: Function) {
-        this.callbacks[event].push(callback)
-    }
-
-    public read() {
+    read(_filePath: string, forEach: (line: string, lineNumber: number, reader: any) => void): void {
         this.lines.forEach((line, index) => {
-            this.callbacks.line.forEach(cb => cb(line, index))
+            forEach(line, index, null)
         })
-
-        this.callbacks.close.forEach(cb => cb())
     }
 
 }
