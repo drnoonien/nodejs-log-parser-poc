@@ -19,8 +19,13 @@ async function main() {
     const out: EventLine[] = []
     let collect = false
     let worldMarkers: EventLine[] = []
+    let map : EventLine
 
     logParser.streamSync(filePath, (eventLine, _reader) => {
+
+        if (eventLine.event === EVENTS.MAP_CHANGE) {
+            map = eventLine
+        }
 
         if (eventLine.event === EVENTS.WORLD_MARKER_PLACED) {
             worldMarkers.push(eventLine)
@@ -40,10 +45,11 @@ async function main() {
 
 
             out.push(eventLine)
-            console.log('Decorating log with world markers')
+            console.log('Decorating log with world markers and map data')
             for (let index = 0; index < worldMarkers.length; index++) {
                 out.push(worldMarkers[index])
             }
+            out.push(map)
             collect = true
             return
         }
