@@ -62,6 +62,9 @@ export const EVENTS = {
     WORLD_MARKER_PLACED: "WORLD_MARKER_PLACED",
     WORLD_MARKER_REMOVED: "WORLD_MARKER_REMOVED",
     ZONE_CHANGE: "ZONE_CHANGE",
+    SPELL_EMPOWER_START: "SPELL_EMPOWER_START",
+    SPELL_EMPOWER_END: "SPELL_EMPOWER_END",
+    SPELL_EMPOWER_INTERRUPT: "SPELL_EMPOWER_INTERRUPT",
 }
 
 export type EventLine = {
@@ -77,6 +80,7 @@ export class EventMapper {
         if (anyOf(lineArgs.event,
             EVENTS.EMOTE,
             EVENTS.SPELL_CAST_FAILED,
+            EVENTS.COMBATANT_INFO,
         )) {
             return undefined
         }
@@ -877,7 +881,29 @@ export class EventMapper {
                 }
             }
 
-            if ([EVENTS.SPELL_CAST_START, EVENTS.SPELL_SUMMON].includes(event)) {
+            if (event == EVENTS.SPELL_EMPOWER_END) {
+                assertArgLen(args, 14)
+
+                return {
+                    ...data,
+
+                    // Suffix
+                    numChargesSpent: args[13] //Maybe? Idk tbh, just guessing at this point
+                }
+            }
+
+            if (event == EVENTS.SPELL_EMPOWER_INTERRUPT) {
+                assertArgLen(args, 14)
+
+                return {
+                    ...data,
+
+                    // Suffix
+                    failedType: args[13] //Maybe? Idk tbh, just guessing at this point
+                }
+            }
+
+            if ([EVENTS.SPELL_CAST_START, EVENTS.SPELL_SUMMON, EVENTS.SPELL_EMPOWER_START].includes(event)) {
                 assertArgLen(args, 13)
                 return data
             }

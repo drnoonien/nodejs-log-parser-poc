@@ -5,7 +5,7 @@ import { NReadLinesReader, SyncLineReader } from './line-reader'
 import { WordBuilder } from './parser-utils'
 import { HH_MM_SS_SSStoMilli } from './time-utils'
 
-const VALID_COMBAT_LOG_VERSION = 19
+const VALID_COMBAT_LOG_VERSION = 20
 
 export const ParserErrors = {
     INVALID_START_OF_FILE: {
