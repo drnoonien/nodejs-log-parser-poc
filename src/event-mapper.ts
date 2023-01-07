@@ -769,7 +769,7 @@ function SPELL_CAST_FAILED(args: string[], extra: any) {
     return {
         // This 'as const' is the magic keyword that makes
         // discrimination work later. 
-        event: "SPELL_CREATE" as const,
+        event: "SPELL_CAST_FAILED" as const,
 
         date: args[0],
         timestamp: `${extra.encounterTimeMs}`,
@@ -812,7 +812,7 @@ function SPELL_CAST_SUCCESS(args: string[], extra: any) {
     return {
         // This 'as const' is the magic keyword that makes
         // discrimination work later. 
-        event: "SPELL_DAMAGE" as const,
+        event: "SPELL_CAST_SUCCESS" as const,
         date: args[0],
         timestamp: `${extra.encounterTimeMs}`,
 
