@@ -1,5 +1,4 @@
 import { assertDefined } from './assert-utils'
-import { EVENTS } from './event-mapper'
 import { eventMapperContext } from './event-mapper-context'
 import { NReadLinesReader, SyncLineReader } from './line-reader'
 import { WordBuilder } from './parser-utils'
@@ -168,12 +167,12 @@ export class LogParser<P> {
 
         let encounterTimeMs = -1
 
-        if (event == EVENTS.ENCOUNTER_START) {
+        if (event == "ENCOUNTER_START") {
 
             encounterTimeMs = 0
             this.currentEncounterStartMs = currentMs
 
-        } else if (event == EVENTS.ENCOUNTER_END) {
+        } else if (event == "ENCOUNTER_END") {
 
             assertDefined(this.currentEncounterStartMs)
             encounterTimeMs = currentMs - this.currentEncounterStartMs

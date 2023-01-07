@@ -1,503 +1,128 @@
-import { mapCombatantInfoArgs } from './combatant-info-mapper'
-import { eventMapperContext } from './event-mapper-context'
 import { LineArgs, ParserError, ParserErrors } from './log-parser'
 
-const CUSTOM_EVENTS = {
-    C_DAMAGE_SPLIT: "SPELL_DAMAGE_SPLIT_C",
-    C_DAMAGE_SHIELD: "SPELL_DAMAGE_SHIELD_C",
-    C_DAMAGE_SHIELD_MISSED: "SPELL_DAMAGE_SHIELD_MISSED_C",
-}
+export type COMBAT_LOG_VERSION = ReturnType<typeof COMBAT_LOG_VERSION>
+export type COMBATANT_INFO = ReturnType<typeof COMBATANT_INFO>
+export type DAMAGE_SPLIT = ReturnType<typeof DAMAGE_SPLIT>
+export type DAMAGE_SHIELD = ReturnType<typeof DAMAGE_SHIELD>
+export type DAMAGE_SHIELD_MISSED = ReturnType<typeof DAMAGE_SHIELD_MISSED>
+export type EMOTE = ReturnType<typeof EMOTE>
+export type ENCOUNTER_END = ReturnType<typeof ENCOUNTER_END>
+export type ENCOUNTER_START = ReturnType<typeof ENCOUNTER_START>
+export type ENVIRONMENTAL_DAMAGE = ReturnType<typeof ENVIRONMENTAL_DAMAGE>
+export type ENCHANT_APPLIED = ReturnType<typeof ENCHANT_APPLIED>
+export type ENCHANT_REMOVED = ReturnType<typeof ENCHANT_REMOVED>
+export type MAP_CHANGE = ReturnType<typeof MAP_CHANGE>
+export type PARTY_KILL = ReturnType<typeof PARTY_KILL>
+export type RANGE_DAMAGE = ReturnType<typeof RANGE_DAMAGE>
+export type RANGE_MISSED = ReturnType<typeof RANGE_MISSED>
+export type SPELL_ABSORBED = ReturnType<typeof SPELL_ABSORBED>
+export type SPELL_AURA_APPLIED_DOSE = ReturnType<typeof SPELL_AURA_APPLIED_DOSE>
+export type SPELL_AURA_APPLIED = ReturnType<typeof SPELL_AURA_APPLIED>
+export type SPELL_AURA_BROKEN_SPELL = ReturnType<typeof SPELL_AURA_BROKEN_SPELL>
+export type SPELL_AURA_BROKEN = ReturnType<typeof SPELL_AURA_BROKEN>
+export type SPELL_AURA_REFRESH = ReturnType<typeof SPELL_AURA_REFRESH>
+export type SPELL_AURA_REMOVED_DOSE = ReturnType<typeof SPELL_AURA_REMOVED_DOSE>
+export type SPELL_AURA_REMOVED = ReturnType<typeof SPELL_AURA_REMOVED>
+export type SPELL_CREATE = ReturnType<typeof SPELL_CREATE>
+export type SPELL_CAST_FAILED = ReturnType<typeof SPELL_CAST_FAILED>
+export type SPELL_CAST_START = ReturnType<typeof SPELL_CAST_START>
+export type SPELL_CAST_SUCCESS = ReturnType<typeof SPELL_CAST_SUCCESS>
+export type SPELL_DAMAGE = ReturnType<typeof SPELL_DAMAGE>
+export type SPELL_DRAIN = ReturnType<typeof SPELL_DRAIN>
+export type SPELL_LEECH = ReturnType<typeof SPELL_LEECH>
+export type SPELL_DISPEL = ReturnType<typeof SPELL_DISPEL>
+export type SPELL_ENERGIZE = ReturnType<typeof SPELL_ENERGIZE>
+export type SPELL_EXTRA_ATTACKS = ReturnType<typeof SPELL_EXTRA_ATTACKS>
+export type SPELL_HEAL_ABSORBED = ReturnType<typeof SPELL_HEAL_ABSORBED>
+export type SPELL_HEAL = ReturnType<typeof SPELL_HEAL>
+export type SPELL_INSTAKILL = ReturnType<typeof SPELL_INSTAKILL>
+export type SPELL_INTERRUPT = ReturnType<typeof SPELL_INTERRUPT>
+export type SPELL_MISSED = ReturnType<typeof SPELL_MISSED>
+export type SPELL_PERIODIC_DAMAGE = ReturnType<typeof SPELL_PERIODIC_DAMAGE>
+export type SPELL_PERIODIC_ENERGIZE = ReturnType<typeof SPELL_PERIODIC_ENERGIZE>
+export type SPELL_PERIODIC_HEAL = ReturnType<typeof SPELL_PERIODIC_HEAL>
+export type SPELL_PERIODIC_MISSED = ReturnType<typeof SPELL_PERIODIC_MISSED>
+export type SPELL_RESURRECT = ReturnType<typeof SPELL_RESURRECT>
+export type SPELL_SUMMON = ReturnType<typeof SPELL_SUMMON>
+export type SPELL_STOLEN = ReturnType<typeof SPELL_STOLEN>
+export type SWING_DAMAGE_LANDED = ReturnType<typeof SWING_DAMAGE_LANDED>
+export type SWING_DAMAGE = ReturnType<typeof SWING_DAMAGE>
+export type SWING_MISSED = ReturnType<typeof SWING_MISSED>
+export type UNIT_DESTROYED = ReturnType<typeof UNIT_DESTROYED>
+export type UNIT_DIED = ReturnType<typeof UNIT_DIED>
+export type WORLD_MARKER_PLACED = ReturnType<typeof WORLD_MARKER_PLACED>
+export type WORLD_MARKER_REMOVED = ReturnType<typeof WORLD_MARKER_REMOVED>
+export type ZONE_CHANGE = ReturnType<typeof ZONE_CHANGE>
+export type SPELL_EMPOWER_START = ReturnType<typeof SPELL_EMPOWER_START>
+export type SPELL_EMPOWER_END = ReturnType<typeof SPELL_EMPOWER_END>
+export type SPELL_EMPOWER_INTERRUPT = ReturnType<typeof SPELL_EMPOWER_INTERRUPT>
 
-enum PowerType {
-    HealthCost = -2,
-    None = -1,
-    Mana = 0,
-    Rage = 1,
-    Focus = 2,
-    Energy = 3,
-    ComboPoints = 4,
-    Runes = 5,
-    RunicPower = 6,
-    SoulShards = 7,
-    LunarPower = 8,
-    HolyPower = 9,
-    Alternate = 10, // Boss specific stuff, think cho'gall corruption level
-    Maelstrom = 11,
-    Chi = 12,
-    Insanity = 13,
-    Obsolete = 14, //Warlock remnant
-    Obsolete2 = 15, //Warlock remnant
-    ArcaneCharges = 16,
-    Fury = 17,
-    Pain = 18,
-    Essence = 19,
-    RuneBlood = 20,
-    RuneFrost = 21,
-    RuneUnholy = 22,
-    NumPowerTypes = 23
-}
-/*
-TODO:
-enum SchoolType {
-    Physical = 1,
-    Holy = 2,
-    Holystrike = 3,
-    Fire = 4,
-    Flamestrike = 5,
-
-}
-*/
-
-type Event = CombatLogVersion | CombatantInfo | DamageSplit
-    | DamageShield | DamageShieldMissed| Emote 
-    | EncounterEnd | EncounterStart | EnvironmentalDamage
-    | EnchantApplied | EnchantRemoved | MapChange | PartyKill
-    | RangeDamage | RangeMissed | SpellAbsorbed
-    | SpellAuraAppliedDose | SpellAuraApplied | SpellAuraBrokenSpell
-    | SpellAuraBroken | SpellAuraRefresh | SpellAuraRemovedDose
-    | SpellAuraRemoved | SpellCreate | SpellCastFailed | SpellCastStart
-    | SpellCastSuccess | SpellDamage | SpellDrain | SpellLeech
-    | SpellDispel | SpellEnergize | SpellExtraAttacks | SpellHealAbsorbed
-    | SpellHeal | SpellInstakill | SpellInterrupt | SpellMissed
-    | SpellPeriodicDamage | SpellPeriodicEnergize | SpellPeriodicHeal
-    | SpellPeriodicMissed | SpellResurrect | SpellSummon | SpellStolen
-    | SwingDamageLanded | SwingDamage | SwingMissed | UnitDestroyed 
-    | UnitDied | WorldMarkerPlaced | WorldMarkerRemoved | ZoneChange
-    | SpellEmpowerStart | SpellEmpowerEnd | SpellEmpowerInterrupt
-
-type baseEvent = {
-    date: string
-    timestamp: string
-}
-
-type baseUnitEvent = baseEvent & {
-    sourceGuid: string
-    sourceName: string
-    sourceFlags: number
-    sourceRaidFlags: number
-    destGuid: string
-    destName: string
-    destFlags: number
-    destRaidFlags: number
-}
-
-type missedEvent = {
-    missType: string
-    isOffHand?: number
-    amountMissed?: number
-    baseAmount?: number
-    critical?: number
-}
-
-type advancedUnitEvent = baseUnitEvent & {
-    infoGuid: string
-    ownerGuid: string
-    currentHp: number
-    maxHp: number
-    attackPower: number
-    spellPower: number
-    armor: number
-    absorb: number
-    powerType: PowerType
-    currentPower: number
-    maxPower: number
-    powerCost: number
-    positionX: number
-    positionY: number
-    uiMapId: number
-    facing: number
-    item_level: number //TODO: This is still documented as "item level" for players, but level for NPCs
-}
-
-type damageSuffixEvent = {
-    amount: number
-    baseAmount: number
-    overkill: number
-    school: number
-    resisted?: number
-    blocked?: number
-    absorbed?: number
-    critical?: number
-    glancing?: number
-    crushing?: number
-}
-
-type SpellPrefixEvent =  {
-    spellId: number
-    spellName: string
-    spellSchool: number
-}
-
-type EnergizeSuffixEvent =  {
-    amount: number
-    overEnergize: number
-    powerType: PowerType
-    maxPower: number
-}
-type HealSuffixEvent =  {
-    amount: number
-    baseAmount: number
-    overheal: number
-    absorbed: number
-    critical?: number
-}
-
-type baseDeathEvent = baseUnitEvent & {
-    recapID?: number //guessing type tbh, also maybe not present it seems?
-    unconsciousOnDeath: number //Guessing it's a bool expressed a 0 or 1, real name is #unconsciousOnDeath
-};
-
-type CombatLogVersion = baseEvent & {
-    event: "COMBAT_LOG_VERSION"
-    combatLogVersionKey: string
-    combatLogVersionValue: number
-    advancedCombatLogEnabledKey: string
-    advancedCombatLogEnabledValue: number
-    buildVersionKey: string
-    buildVersionValue: number
-    projectIdKey: string
-    projectIdValue: number
-}
-
-// Cba fixing for now, it's filtered
-type CombatantInfo = baseEvent & {
-    event: "COMBATANT_INFO"
-};
-type DamageSplit = advancedUnitEvent & SpellPrefixEvent & damageSuffixEvent & {
-    event: "DAMAGE_SPLIT"
-};
-type DamageShield = advancedUnitEvent & SpellPrefixEvent & damageSuffixEvent & {
-    event: "DAMAGE_SHIELD"
-};
-type DamageShieldMissed = baseUnitEvent & SpellPrefixEvent & missedEvent & {
-    event: "DAMAGE_SHIELD_MISSED"
-};
-// Filtered
-type Emote = baseEvent & {
-    event: "EMOTE"
-};
-type EncounterEnd = baseEvent & {
-    event: "ENCOUNTER_END"
-    encounterId: number
-    encounterName: string
-    difficultyId: number
-    groupSize: number
-    success: number
-    fightTimeMs: number
-};
-type EncounterStart = baseEvent & {
-    event: "ENCOUNTER_START"
-    encounterId: number
-    encounterName: string
-    difficultyId: number
-    groupSize: number
-    instanceId: number
-};
-type EnvironmentalDamage = advancedUnitEvent & damageSuffixEvent & {
-    event: "ENVIRONMENTAL_DAMAGE"
-    environmentalType: string
-};
-type EnchantApplied = baseUnitEvent & {
-    event: "ENCHANT_APPLIED"
-    spellName: string
-    itemId: number
-    itemName: string
-};
-type EnchantRemoved = baseUnitEvent & {
-    event: "ENCHANT_REMOVED"
-    spellName: string
-    itemId: number
-    itemName: string
-};
-type MapChange = baseEvent & {
-    event: "MAP_CHANGE"
-    uiMapId: number
-    uiMapName: string
-    x0: number
-    x1: number
-    y0: number
-    y1: number
-};
-type PartyKill = baseDeathEvent & {
-    event: "PARTY_KILL"
-};
-type RangeDamage = advancedUnitEvent & SpellPrefixEvent & damageSuffixEvent & {
-    event: "RANGE_DAMAGE"
-};
-type RangeMissed = baseUnitEvent & SpellPrefixEvent & missedEvent & {
-    event: "RANGE_MISSED"
-};
-type SpellAbsorbed = baseUnitEvent & damageSuffixEvent & {
-    event: "SPELL_ABSORBED"
-    spellId?: number
-    spellName: string
-    spellSchool: number
-};
-type SpellAuraAppliedDose = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_AURA_APPLIED_DOSE"
-    auraType: string
-    amount?: number
-};
-type SpellAuraApplied = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_AURA_APPLIED"
-    auraType: string
-    amount?: number
-};
-type SpellAuraBrokenSpell = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_AURA_BROKEN_SPELL"
-    extraSpellId: number
-    extraSpellName: string
-    extraSchool: number
-    auraType: string
-};
-type SpellAuraBroken = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_AURA_BROKEN"
-    auraType: string
-};
-type SpellAuraRefresh = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_AURA_REFRESH"
-    auraType: string
-    amount?: number
-};
-type SpellAuraRemovedDose = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_AURA_REMOVED_DOSE"
-    auraType: string
-    amount?: number
-};
-type SpellAuraRemoved = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_AURA_REMOVED"
-    auraType: string
-    amount?: number
-};
-type SpellCreate = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_CREATE"
-};
-// Seems to be self-only, so filtered for now
-type SpellCastFailed = baseEvent & {
-    event: "SPELL_CAST_FAILED"
-};
-type SpellCastStart = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_CAST_START"
-};
-type SpellCastSuccess = advancedUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_CAST_SUCCESS"
-};
-type SpellDamage = advancedUnitEvent & SpellPrefixEvent & damageSuffixEvent & {
-    event: "SPELL_DAMAGE"
-};
-type SpellDrain =  advancedUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_DRAIN"
-    amount: number
-    extraPowerType: PowerType 
-    extraAmount: number 
-    extraMaxPower?: number //Assumption on wowpedia
-};
-type SpellLeech = advancedUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_LEECH"
-    amount: number
-    extraPowerType: PowerType 
-    extraAmount: number 
-};
-type SpellDispel = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_DISPEL"
-    extraSpellId: number
-    extraSpellName: string
-    extraSchool: number
-    auraType: string
-};
-type SpellEnergize = advancedUnitEvent & SpellPrefixEvent & EnergizeSuffixEvent & {
-    event: "SPELL_ENERGIZE"
-};
-type SpellExtraAttacks = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_EXTRA_ATTACKS"
-    amount: number
-};
-type SpellHealAbsorbed = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_HEAL_ABSORBED"
-    caserGuid: string
-    casterName: string
-    casterFlags: number
-    casterRaidFlags: number
-    absorbSpellId: number
-    absorbSpellName: string
-    absorbSpellSchool: number
-    amount: number
-    baseAmount: number
-};
-type SpellHeal = advancedUnitEvent & SpellPrefixEvent & HealSuffixEvent & {
-    event: "SPELL_HEAL"
-};
-type SpellInstakill = baseDeathEvent & SpellPrefixEvent & {
-    event: "SPELL_INSTAKILL"
-};
-type SpellInterrupt = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_INTERRUPT"
-    extraSpellId: number
-    extraSpellName: string
-    extraSchool: number
-};
-type SpellMissed = baseUnitEvent & SpellPrefixEvent & missedEvent & {
-    event: "SPELL_MISSED"
-};
-type SpellPeriodicDamage = advancedUnitEvent & SpellPrefixEvent & damageSuffixEvent & {
-    event: "SPELL_PERIODIC_DAMAGE"
-};
-type SpellPeriodicEnergize = advancedUnitEvent & SpellPrefixEvent & EnergizeSuffixEvent & {
-    event: "SPELL_PERIODIC_ENERGIZE"
-};
-type SpellPeriodicHeal = advancedUnitEvent & SpellPrefixEvent & HealSuffixEvent & {
-    event: "SPELL_PERIODIC_HEAL"
-};
-type SpellPeriodicMissed = baseUnitEvent & SpellPrefixEvent & missedEvent & {
-    event: "SPELL_PERIODIC_MISSED"
-};
-type SpellResurrect = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_RESURRECT"
-};
-type SpellSummon = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_SUMMON"
-};
-type SpellStolen = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_STOLEN"
-    extraSpellId: number
-    extraSpellName: string
-    extraSchool: number
-    auraType: string
-};
-type SwingDamageLanded = advancedUnitEvent & damageSuffixEvent & {
-    event: "SWING_DAMAGE_LANDED"
-};
-type SwingDamage = advancedUnitEvent & damageSuffixEvent & {
-    event: "SWING_DAMAGE"
-};
-type SwingMissed = baseUnitEvent & missedEvent & {
-    event: "SWING_MISSED"
-};
-type UnitDestroyed = baseDeathEvent & {
-    event: "UNIT_DESTROYED"
-};
-type UnitDied = baseDeathEvent & {
-    event: "UNIT_DIED"
-};
-type WorldMarkerPlaced = baseEvent & {
-    event: "WORLD_MARKER_PLACED"
-    instanceId: number
-    marker: number
-    x: number
-    y: number
-};
-type WorldMarkerRemoved = baseEvent & {
-    event: "WORLD_MARKER_REMOVED"
-    marker: number
-};
-type ZoneChange = baseEvent & {
-    event: "ZONE_CHANGE"
-    instanceId: number
-    zoneName: string
-    difficultyId: number
-};
-type SpellEmpowerStart = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_EMPOWER_START"
-};
-type SpellEmpowerEnd = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_EMPOWER_END"
-    chargesSpent: number //Still guessing here
-};
-type SpellEmpowerInterrupt = baseUnitEvent & SpellPrefixEvent & {
-    event: "SPELL_EMPOWER_INTERRUPT"
-    failedType: string //Still guessing here
-};
+export type MAPPED_EVENT =
+    COMBAT_LOG_VERSION |
+    COMBATANT_INFO |
+    DAMAGE_SPLIT |
+    DAMAGE_SHIELD |
+    DAMAGE_SHIELD_MISSED |
+    EMOTE |
+    ENCOUNTER_END |
+    ENCOUNTER_START |
+    ENVIRONMENTAL_DAMAGE |
+    ENCHANT_APPLIED |
+    ENCHANT_REMOVED |
+    MAP_CHANGE |
+    PARTY_KILL |
+    RANGE_DAMAGE |
+    RANGE_MISSED |
+    SPELL_ABSORBED |
+    SPELL_AURA_APPLIED_DOSE |
+    SPELL_AURA_APPLIED |
+    SPELL_AURA_BROKEN_SPELL |
+    SPELL_AURA_BROKEN |
+    SPELL_AURA_REFRESH |
+    SPELL_AURA_REMOVED_DOSE |
+    SPELL_AURA_REMOVED |
+    SPELL_CREATE |
+    SPELL_CAST_FAILED |
+    SPELL_CAST_START |
+    SPELL_CAST_SUCCESS |
+    SPELL_DAMAGE |
+    SPELL_DRAIN |
+    SPELL_LEECH |
+    SPELL_DISPEL |
+    SPELL_ENERGIZE |
+    SPELL_EXTRA_ATTACKS |
+    SPELL_HEAL_ABSORBED |
+    SPELL_HEAL |
+    SPELL_INSTAKILL |
+    SPELL_INTERRUPT |
+    SPELL_MISSED |
+    SPELL_PERIODIC_DAMAGE |
+    SPELL_PERIODIC_ENERGIZE |
+    SPELL_PERIODIC_HEAL |
+    SPELL_PERIODIC_MISSED |
+    SPELL_RESURRECT |
+    SPELL_SUMMON |
+    SPELL_STOLEN |
+    SWING_DAMAGE_LANDED |
+    SWING_DAMAGE |
+    SWING_MISSED |
+    UNIT_DESTROYED |
+    UNIT_DIED |
+    WORLD_MARKER_PLACED |
+    WORLD_MARKER_REMOVED |
+    ZONE_CHANGE |
+    SPELL_EMPOWER_START |
+    SPELL_EMPOWER_END |
+    SPELL_EMPOWER_INTERRUPT
 
 
-
-export const EVENTS = {
-    COMBAT_LOG_VERSION: "COMBAT_LOG_VERSION",
-    COMBATANT_INFO: "COMBATANT_INFO",
-    DAMAGE_SPLIT: "DAMAGE_SPLIT",
-    DAMAGE_SHIELD: "DAMAGE_SHIELD",
-    DAMAGE_SHIELD_MISSED: "DAMAGE_SHIELD_MISSED",
-    EMOTE: "EMOTE",
-    ENCOUNTER_END: "ENCOUNTER_END",
-    ENCOUNTER_START: "ENCOUNTER_START",
-    ENVIRONMENTAL_DAMAGE: "ENVIRONMENTAL_DAMAGE",
-    ENCHANT_APPLIED: "ENCHANT_APPLIED",
-    ENCHANT_REMOVED: "ENCHANT_REMOVED",
-    MAP_CHANGE: "MAP_CHANGE",
-    PARTY_KILL: "PARTY_KILL",
-    RANGE_DAMAGE: "RANGE_DAMAGE",
-    RANGE_MISSED: "RANGE_MISSED",
-    SPELL_ABSORBED: "SPELL_ABSORBED",
-    SPELL_AURA_APPLIED_DOSE: "SPELL_AURA_APPLIED_DOSE",
-    SPELL_AURA_APPLIED: "SPELL_AURA_APPLIED",
-    SPELL_AURA_BROKEN_SPELL: "SPELL_AURA_BROKEN_SPELL",
-    SPELL_AURA_BROKEN: "SPELL_AURA_BROKEN",
-    SPELL_AURA_REFRESH: "SPELL_AURA_REFRESH",
-    SPELL_AURA_REMOVED_DOSE: "SPELL_AURA_REMOVED_DOSE",
-    SPELL_AURA_REMOVED: "SPELL_AURA_REMOVED",
-    SPELL_CREATE: "SPELL_CREATE",
-    SPELL_CAST_FAILED: "SPELL_CAST_FAILED",
-    SPELL_CAST_START: "SPELL_CAST_START",
-    SPELL_CAST_SUCCESS: "SPELL_CAST_SUCCESS",
-    SPELL_DAMAGE: "SPELL_DAMAGE",
-    SPELL_DRAIN: "SPELL_DRAIN",
-    SPELL_LEECH: "SPELL_LEECH",
-    SPELL_DISPEL: "SPELL_DISPEL",
-    SPELL_ENERGIZE: "SPELL_ENERGIZE",
-    SPELL_EXTRA_ATTACKS: "SPELL_EXTRA_ATTACKS",
-    SPELL_HEAL_ABSORBED: "SPELL_HEAL_ABSORBED",
-    SPELL_HEAL: "SPELL_HEAL",
-    SPELL_INSTAKILL: "SPELL_INSTAKILL",
-    SPELL_INTERRUPT: "SPELL_INTERRUPT",
-    SPELL_MISSED: "SPELL_MISSED",
-    SPELL_PERIODIC_DAMAGE: "SPELL_PERIODIC_DAMAGE",
-    SPELL_PERIODIC_ENERGIZE: "SPELL_PERIODIC_ENERGIZE",
-    SPELL_PERIODIC_HEAL: "SPELL_PERIODIC_HEAL",
-    SPELL_PERIODIC_MISSED: "SPELL_PERIODIC_MISSED",
-    SPELL_RESURRECT: "SPELL_RESURRECT",
-    SPELL_SUMMON: "SPELL_SUMMON",
-    SPELL_STOLEN: "SPELL_STOLEN",
-    SWING_DAMAGE_LANDED: "SWING_DAMAGE_LANDED",
-    SWING_DAMAGE: "SWING_DAMAGE",
-    SWING_MISSED: "SWING_MISSED",
-    UNIT_DESTROYED: "UNIT_DESTROYED",
-    UNIT_DIED: "UNIT_DIED",
-    WORLD_MARKER_PLACED: "WORLD_MARKER_PLACED",
-    WORLD_MARKER_REMOVED: "WORLD_MARKER_REMOVED",
-    ZONE_CHANGE: "ZONE_CHANGE",
-    SPELL_EMPOWER_START: "SPELL_EMPOWER_START",
-    SPELL_EMPOWER_END: "SPELL_EMPOWER_END",
-    SPELL_EMPOWER_INTERRUPT: "SPELL_EMPOWER_INTERRUPT",
-}
-
-export type EventLine = {
-    date: string
-    timestamp: string
-    event: string
-    [arg: string]: any
-}
+// ---------------------------------------------------------------------------------------
 
 export class EventMapper {
 
-    public filteredMap(lineArgs: LineArgs): EventLine | undefined {
-        if (anyOf(lineArgs.event,
-            EVENTS.EMOTE,
-            EVENTS.SPELL_CAST_FAILED,
-            EVENTS.COMBATANT_INFO,
-        )) {
-            return undefined
-        }
-
-        return this.map(lineArgs)
-    }
-
-    public map(lineArgs: LineArgs): EventLine {
-
-        // TODO: This has to be cleared before we exit from here, but
-        // we've got 4 million return statements...
-        eventMapperContext.setLineArgs(lineArgs)
+    public map(lineArgs: LineArgs): MAPPED_EVENT | undefined {
 
         let event = lineArgs.event
-        let data: EventLine
 
         const args = [
             lineArgs.dateTime,
@@ -505,937 +130,71 @@ export class EventMapper {
             ...lineArgs.args
         ]
 
-        if (anyOf(event, EVENTS.ENCHANT_APPLIED, EVENTS.ENCHANT_REMOVED)) {
-            assertArgLen(args, 13)
-
-            return {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-
-                // Suffix
-                spellName: args[10],
-                itemId: args[11],
-                itemName: args[12],
-            }
-        }
-
-        if (event == EVENTS.WORLD_MARKER_PLACED) {
-            assertArgLen(args, 6)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                instanceId: args[2],
-                marker: args[3],
-                x: args[4],
-                y: args[5],
-            }
-        }
-
-        if (event == EVENTS.WORLD_MARKER_REMOVED) {
-            assertArgLen(args, 3)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                marker: args[2]
-            }
-        }
-
-        if (event == EVENTS.COMBATANT_INFO) {
-            assertArgLen(args, 35)
-
-            const combatantInfo = mapCombatantInfoArgs(args)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                faction: args[3],
-                strength: args[4],
-                agility: args[5],
-                stamina: args[6],
-                intellect: args[7],
-                dodge: args[8],
-                parry: args[9],
-                block: args[10],
-                critMelee: args[11],
-                critRanged: args[12],
-                critSpell: args[13],
-                speed: args[14],
-                leech: args[15],
-                hasteMelee: args[16],
-                hasteRanged: args[17],
-                hasteSpell: args[18],
-                avoidance: args[19],
-                mastery: args[20],
-                versatilityDamageDone: args[21],
-                versatilityHealingDone: args[22],
-                versatilityDamageTaken: args[23],
-                armor: args[24],
-                specId: args[25],
-                talentInfo: combatantInfo.talentInfo,
-                pvpTalentInfo: combatantInfo.pvpTalentInfo,
-                borrowedPowerInfo: args[28],
-                gearInfo: combatantInfo.gearInfo,
-                interestingAuras: args[30],
-            }
-        }
-
-        if (event == EVENTS.ENCOUNTER_START) {
-            assertArgLen(args, 7)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                encounterId: args[2],
-                encounterName: args[3],
-                difficultyId: args[4],
-                groupSize: args[5],
-                instanceId: args[6],
-            }
-        }
-
-        if (event == EVENTS.ENCOUNTER_END) {
-            assertArgLen(args, 8)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                encounterId: args[2],
-                encounterName: args[3],
-                difficultyId: args[4],
-                groupSize: args[5],
-                success: args[6],
-                fightTimeMs: args[7],
-            }
-        }
-
-        if (event == EVENTS.MAP_CHANGE) {
-            assertArgLen(args, 8)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                uiMapId: args[2],
-                uiMapName: args[3],
-                x0: args[4],
-                x1: args[5],
-                y0: args[6],
-                y1: args[7],
-            }
-        }
-
-        if (event == EVENTS.ZONE_CHANGE) {
-            assertArgLen(args, 5)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                instanceId: args[2],
-                zoneName: args[3],
-                difficultyId: args[4],
-            }
-        }
-
-        if (event == EVENTS.COMBAT_LOG_VERSION) {
-            assertArgLen(args, 9)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: "COMBAT_LOG_VERSION",
-                combatLogVersionKey: args[1],
-                combatLogVersionValue: args[2],
-                advancedCombatLogEnabledKey: args[3],
-                advancedCombatLogEnabledValue: args[4],
-                buildVersionKey: args[5],
-                buildVersionValue: args[6],
-                projectIdKey: args[7],
-                projectIdValue: args[8],
-            }
-        }
-
-        if (event == EVENTS.EMOTE) {
-
-            // TODO: You can get commas inline in the text without an escape
-            // sequence around it:
-            //
-            // 8/18
-            // 19:35:55.758,EMOTE,Creature-0-3893-2481-14644-183533-00007E7769,"Genesis
-            // Relic",0000000000000000,nil,|TInterface\\ICONS\\Spell_Broker_GroundState.BLP:20|t
-            // The Relic comes to life as Xy'mox channels into it,
-            // emanating Genesis Rings!
-
-            // assertArgLen(args, 7)
-
-            // return {
-            //     date: args[0],
-            //     timestamp: `${lineArgs.encounterTimeMs}`,
-            //     event: args[1],
-            //     sourceGuid: args[2],
-            //     sourceName: args[3],
-            //     destGuid: args[4],
-            //     destName: args[5],
-            //     text: args[6],
-            // }
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1]
-            }
-        }
-
-
-        if (anyOf(event, EVENTS.UNIT_DIED, EVENTS.UNIT_DESTROYED, EVENTS.PARTY_KILL)) {
-            assertArgLen(args, 11)
-
-            return {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-
-                // Unclear exactly what this arg is, there's something
-                // about "unconsciousOnDeath"
-                recapId: args[10]
-            }
-        }
-
-        // This is an ugly hack, all these events behave as if they
-        // were prefixed with SPELL_, so we'll just do that manually
-        // for now. In the future we need to modularize the extractors
-        // so we can map freely. 
-        if ([
-            EVENTS.DAMAGE_SPLIT, EVENTS.DAMAGE_SHIELD, EVENTS.DAMAGE_SHIELD_MISSED
-        ].includes(event)) {
-
-            if (EVENTS.DAMAGE_SPLIT == event) {
-                event = CUSTOM_EVENTS.C_DAMAGE_SPLIT
-            }
-            if (EVENTS.DAMAGE_SHIELD == event) {
-                event = CUSTOM_EVENTS.C_DAMAGE_SHIELD
-            }
-            if (EVENTS.DAMAGE_SHIELD_MISSED == event) {
-                event = CUSTOM_EVENTS.C_DAMAGE_SHIELD_MISSED
-            }
-
-        }
-
-        if (event == EVENTS.ENVIRONMENTAL_DAMAGE) {
-            assertArgLen(args, 38)
-
-            return {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-
-                // Advanced
-                infoGuid: args[10],
-                ownerGuid: args[11],
-                currentHp: args[12],
-                maxHp: args[13],
-                attackPower: args[14],
-                spellPower: args[15],
-                armor: args[16],
-                absorb: args[17],
-                powerType: args[18],
-                currentPower: args[19],
-                maxPower: args[20],
-                powerCost: args[21],
-                positionX: args[22],
-                positionY: args[23],
-                uiMapId: args[24],
-                facing: args[25],
-                item_level: args[26],
-
-                // Suffix
-                environmentalType: args[27],
-                amount: args[28],
-                baseAmount: args[29],
-                overkill: args[30],
-                school: args[31],
-                unknown_1: assertAlwaysNilOrZero(args, 32),
-                blocked: args[33],
-                absorbed: args[34],
-                critical: args[35], // nil or 1
-                unknown_3: assertAlwaysNilOrZero(args, 36),
-                unknown_4: assertAlwaysNilOrZero(args, 37),
-
-            }
-        }
-
-        if (event.startsWith("SWING_")) {
-            data = {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-            }
-
-            if (anyOf(event, EVENTS.SWING_DAMAGE, EVENTS.SWING_DAMAGE_LANDED)) {
-                assertArgLen(args, 37)
-
-                return {
-                    ...data,
-
-                    // Advanced
-                    infoGuid: args[10],
-                    ownerGuid: args[11],
-                    currentHp: args[12],
-                    maxHp: args[13],
-                    attackPower: args[14],
-                    spellPower: args[15],
-                    armor: args[16],
-                    absorb: args[17],
-                    powerType: args[18],
-                    currentPower: args[19],
-                    maxPower: args[20],
-                    powerCost: args[21],
-                    positionX: args[22],
-                    positionY: args[23],
-                    uiMapId: args[24],
-                    facing: args[25],
-                    item_level: args[26],
-
-                    // Suffix
-                    amount: args[27],
-                    baseAmount: args[28],
-                    overkill: args[29],
-                    school: args[30],
-                    unknown_1: assertAlwaysNilOrZero(args, 31),
-                    blocked: args[32],
-                    absorbed: args[33],
-                    critical: args[34], // nil or 1
-                    unknown_3: assertAlwaysNilOrZero(args, 35),
-                    unknown_4: assertAlwaysNilOrZero(args, 36),
-                }
-            }
-
-            if (event == EVENTS.SWING_MISSED) {
-                assertArgLen(args, 12, 13, 15)
-
-                if (args.length == 12) {
-                    return {
-                        ...data,
-
-                        missType: args[10],
-                        isOffHand: args[11],
-                    }
-                }
-
-                if (args.length == 13) {
-                    return {
-                        ...data,
-
-                        missType: args[10],
-                        isOffHand: args[11],
-                        amountMissed: args[12],
-                    }
-                }
-
-                if (args.length == 15) {
-                    return {
-                        ...data,
-
-                        missType: args[10],
-                        isOffHand: args[11],
-                        amountMissed: args[12],
-                        baseAmount: args[13],
-                        critical: args[14],
-                    }
-                }
-
-            }
-
-        }
-
-        // Special SPELL_ type, cannot be parsed with the rest of the
-        // SPELL_ events, it will be missing the spell info if the
-        // absorbed attack wasn't a spell.
-        if (event == EVENTS.SPELL_ABSORBED) {
-            assertArgLen(args, 20, 23)
-
-            // This relatively new subevent fires in addition to
-            // SWING_MISSED / SPELL_MISSED which already have the
-            // "ABSORB" missType and same amount.
-            //
-            // It optionally includes the spell payload if triggered
-            // from what would be SPELL_DAMAGE.
-
-            const base = {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-            }
-
-            if (args.length == 20) {
-                return {
-                    ...base,
-
-                    // Suffix
-                    casterGuid: args[10],
-                    casterName: args[11],
-                    casterFlags: args[12],
-                    casterRaidFlags: args[13],
-                    absorbSpellId: args[14],
-                    absorbSpellName: args[15],
-                    absorbSpellSchool: args[16],
-                    absorbAmount: args[17],
-                    damageAmount: args[18],
-                    critical: args[19], // This refers to the damaging attack that was absorbed 
-                }
-            }
-
-            if (args.length == 23) {
-                return {
-                    ...base,
-
-                    // Extra spell data
-                    spellId: args[10],
-                    spellName: args[11],
-                    spellSchool: args[12],
-
-                    // Suffix
-                    casterGuid: args[13],
-                    casterName: args[14],
-                    casterFlags: args[15],
-                    casterRaidFlags: args[16],
-                    absorbSpellId: args[17],
-                    absorbSpellName: args[18],
-                    absorbSpellSchool: args[19],
-                    absorbAmount: args[20],
-                    damageAmount: args[21],
-                    critical: args[22], // This refers to the damaging attack that was absorbed 
-                }
-            }
-
-        }
-
-        if ((
-            event.startsWith("SPELL_") || event.startsWith("RANGE_")
-        ) && event != EVENTS.SPELL_ABSORBED) {
-
-            data = {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-
-                // SPELL_
-                spellId: args[10],
-                spellName: args[11],
-                spellSchool: args[12],
-            }
-
-            if (anyOf(event, EVENTS.SPELL_DRAIN, EVENTS.SPELL_LEECH)) {
-                assertArgLen(args, 34, 35)
-
-                if (args.length == 34) {
-                    return {
-                        ...data,
-
-                        // Advanced
-                        infoGuid: args[13],
-                        ownerGuid: args[14],
-                        currentHp: args[15],
-                        maxHp: args[16],
-                        attackPower: args[17],
-                        spellPower: args[18],
-                        armor: args[19],
-                        absorb: args[20],
-                        powerType: args[21],
-                        currentPower: args[22],
-                        maxPower: args[23],
-                        powerCost: args[24],
-                        positionX: args[25],
-                        positionY: args[26],
-                        uiMapId: args[27],
-                        facing: args[28],
-                        item_level: args[29],
-
-                        // Suffix
-                        amount: args[30],
-                        extraPowerType: args[31],
-                        extraAmount: args[32],
-                    }
-                }
-
-                if (args.length == 35) {
-                    return {
-                        ...data,
-
-                        // Advanced
-                        infoGuid: args[13],
-                        ownerGuid: args[14],
-                        currentHp: args[15],
-                        maxHp: args[16],
-                        attackPower: args[17],
-                        spellPower: args[18],
-                        armor: args[19],
-                        absorb: args[20],
-                        powerType: args[21],
-                        currentPower: args[22],
-                        maxPower: args[23],
-                        powerCost: args[24],
-                        positionX: args[25],
-                        positionY: args[26],
-                        uiMapId: args[27],
-                        facing: args[28],
-                        item_level: args[29],
-
-                        // Suffix
-                        amount: args[30],
-                        extraPowerType: args[31],
-                        extraAmount: args[32],
-                        extraMaxPower: args[33],
-                    }
-                }
-
-            }
-
-            if (event == EVENTS.SPELL_INTERRUPT) {
-                assertArgLen(args, 16)
-
-                return {
-                    ...data,
-
-                    // Suffix
-                    extraSpellId: args[13],
-                    extraSpellName: args[14],
-                    extraSchool: args[15],
-                }
-            }
-
-            if (event == EVENTS.SPELL_AURA_BROKEN) {
-                assertArgLen(args, 14)
-
-                return {
-                    ...data,
-
-                    // Suffix
-                    auraType: args[13],
-                }
-            }
-
-            if (anyOf(event, EVENTS.SPELL_DISPEL, EVENTS.SPELL_AURA_BROKEN_SPELL, EVENTS.SPELL_STOLEN)) {
-                assertArgLen(args, 17)
-
-                return {
-                    ...data,
-
-                    // Suffix
-                    extraSpellId: args[13],
-                    extraSpellName: args[14],
-                    extraSchool: args[15],
-                    auraType: args[16],
-                }
-            }
-
-            if (anyOf(event, EVENTS.SPELL_RESURRECT, EVENTS.SPELL_CREATE)) {
-                assertArgLen(args, 13)
-                return data
-            }
-
-            if (event == EVENTS.SPELL_INSTAKILL) {
-                assertArgLen(args, 14)
-
-                return {
-                    ...data,
-
-                    // Unclear exactly what this arg is, there's something
-                    // about "unconsciousOnDeath"
-                    recapId: args[13]
-                }
-            }
-
-            if (event == EVENTS.SPELL_EXTRA_ATTACKS) {
-                assertArgLen(args, 14)
-
-                return {
-                    ...data,
-
-                    amount: args[13]
-                }
-            }
-
-            if (anyOf(event,
-                EVENTS.SPELL_MISSED,
-                EVENTS.RANGE_MISSED,
-                EVENTS.SPELL_PERIODIC_MISSED,
-                CUSTOM_EVENTS.C_DAMAGE_SHIELD_MISSED)
-            ) {
-                assertArgLen(args, 15, 16, 18)
-
-                if (args.length == 15) {
-                    return {
-                        ...data,
-
-                        missType: args[13],
-                        isOffHand: args[14],
-                    }
-                }
-
-                if (args.length == 16) {
-                    return {
-                        ...data,
-
-                        missType: args[13],
-                        isOffHand: args[14],
-                        amountMissed: args[15]
-                    }
-                }
-
-                if (args.length == 18) {
-                    return {
-                        ...data,
-
-                        missType: args[13],
-                        isOffHand: args[14],
-                        amountMissed: args[15],
-                        baseAmount: args[16],
-                        critical: args[17],
-                    }
-                }
-            }
-
-            if (anyOf(event, EVENTS.SPELL_ENERGIZE, EVENTS.SPELL_PERIODIC_ENERGIZE)) {
-                assertArgLen(args, 34)
-
-                return {
-                    ...data,
-
-                    // Advanced
-                    infoGuid: args[13],
-                    ownerGuid: args[14],
-                    currentHp: args[15],
-                    maxHp: args[16],
-                    attackPower: args[17],
-                    spellPower: args[18],
-                    armor: args[19],
-                    absorb: args[20],
-                    powerType: args[21],
-                    currentPower: args[22],
-                    maxPower: args[23],
-                    powerCost: args[24],
-                    positionX: args[25],
-                    positionY: args[26],
-                    uiMapId: args[27],
-                    facing: args[28],
-                    item_level: args[29],
-
-                    // Suffix
-                    amount: args[30],
-                    overEnergize: args[31],
-                    _powerType: args[32],
-                    _maxPower: args[33]
-                }
-            }
-
-            if ([EVENTS.SPELL_HEAL, EVENTS.SPELL_PERIODIC_HEAL].includes(event)) {
-                assertArgLen(args, 35)
-
-                return {
-                    ...data,
-
-                    // Advanced
-                    infoGuid: args[13],
-                    ownerGuid: args[14],
-                    currentHp: args[15],
-                    maxHp: args[16],
-                    attackPower: args[17],
-                    spellPower: args[18],
-                    armor: args[19],
-                    absorb: args[20],
-                    powerType: args[21],
-                    currentPower: args[22],
-                    maxPower: args[23],
-                    powerCost: args[24],
-                    positionX: args[25],
-                    positionY: args[26],
-                    uiMapId: args[27],
-                    facing: args[28],
-                    item_level: args[29],
-
-                    // Suffix
-                    amount: args[30],
-                    baseAmount: args[31],
-                    overheal: args[32], // 0 or amount
-                    absorbed: args[33], // 0 or amount
-                    critical: args[34], // nil or 1
-                }
-            }
-
-            if (event == EVENTS.SPELL_HEAL_ABSORBED) {
-                assertArgLen(args, 22)
-
-                return {
-                    ...data,
-
-                    caserGuid: args[13],
-                    casterName: args[14],
-                    casterFlags: args[15],
-                    casterRaidFlags: args[16],
-                    absorbSpellId: args[17],
-                    absorbSpellName: args[18],
-                    absorbSpellSchool: args[19],
-                    amount: args[20],
-                    baseAmount: args[21],
-                }
-            }
-
-            if (event == EVENTS.SPELL_CAST_SUCCESS) {
-                assertArgLen(args, 30)
-
-                return {
-                    ...data,
-
-                    // Advanced
-                    infoGuid: args[13],
-                    ownerGuid: args[14],
-                    currentHp: args[15],
-                    maxHp: args[16],
-                    attackPower: args[17],
-                    spellPower: args[18],
-                    armor: args[19],
-                    absorb: args[20],
-                    powerType: args[21],
-                    currentPower: args[22],
-                    maxPower: args[23],
-                    powerCost: args[24],
-                    positionX: args[25],
-                    positionY: args[26],
-                    uiMapId: args[27],
-                    facing: args[28],
-                    item_level: args[29],
-                }
-            }
-
-            // This seems to only trigger for the player recording the log
-            if (event == EVENTS.SPELL_CAST_FAILED) {
-                assertArgLen(args, 14)
-
-                return {
-                    ...data,
-
-                    // Suffix
-                    failedType: args[13]
-                }
-            }
-
-            if (event == EVENTS.SPELL_EMPOWER_END) {
-                assertArgLen(args, 14)
-
-                return {
-                    ...data,
-
-                    // Suffix
-                    numChargesSpent: args[13] //Maybe? Idk tbh, just guessing at this point
-                }
-            }
-
-            if (event == EVENTS.SPELL_EMPOWER_INTERRUPT) {
-                assertArgLen(args, 14)
-
-                return {
-                    ...data,
-
-                    // Suffix
-                    failedType: args[13] //Maybe? Idk tbh, just guessing at this point
-                }
-            }
-
-            if ([EVENTS.SPELL_CAST_START, EVENTS.SPELL_SUMMON, EVENTS.SPELL_EMPOWER_START].includes(event)) {
-                assertArgLen(args, 13)
-                return data
-            }
-
-            if ([
-                EVENTS.SPELL_DAMAGE, EVENTS.SPELL_PERIODIC_DAMAGE, EVENTS.RANGE_DAMAGE,
-                CUSTOM_EVENTS.C_DAMAGE_SPLIT, CUSTOM_EVENTS.C_DAMAGE_SHIELD
-            ].includes(event)) {
-                assertArgLen(args, 40)
-
-                return {
-                    ...data,
-
-                    // Advanced
-                    infoGuid: args[13],
-                    ownerGuid: args[14],
-                    currentHp: args[15],
-                    maxHp: args[16],
-                    attackPower: args[17],
-                    spellPower: args[18],
-                    armor: args[19],
-                    absorb: args[20],
-                    powerType: args[21],
-                    currentPower: args[22],
-                    maxPower: args[23],
-                    powerCost: args[24],
-                    positionX: args[25],
-                    positionY: args[26],
-                    uiMapId: args[27],
-                    facing: args[28],
-                    item_level: args[29],
-
-                    // Suffix
-                    amount: args[30],
-                    baseAmount: args[31],
-                    overkill: args[32], // -1 or the overkill value
-                    school: args[33],
-                    unknown_1: assertAlwaysNilOrZero(args, 34),
-                    blocked: args[35],
-                    absorbed: args[36], // 0 or above
-                    critical: args[37], // nil or 1
-                    unknown_3: assertAlwaysNilOrZero(args, 38),
-                    unknown_4: assertAlwaysNilOrZero(args, 39),
-                }
-            }
-
-            if ([EVENTS.SPELL_AURA_APPLIED, EVENTS.SPELL_AURA_REMOVED, EVENTS.SPELL_AURA_APPLIED_DOSE,
-            EVENTS.SPELL_AURA_REMOVED_DOSE, EVENTS.SPELL_AURA_REFRESH].includes(event)) {
-                assertArgLen(args, 14, 15, 16)
-
-                if (args.length == 14) {
-                    return {
-                        ...data,
-
-                        auraType: args[13],
-                    }
-                }
-
-                if (args.length == 15) {
-                    return {
-                        ...data,
-
-                        auraType: args[13],
-                        amount: args[14]
-                    }
-                }
-
-                if (args.length == 16) {
-                    return {
-                        ...data,
-
-                        auraType: args[13],
-                        amount: args[14],
-
-                        // I'm unsure exactly what this 16th param is.
-                        // It showed up during S4 fated, on the
-                        // double-absorb orb (one enemy one friendly).
-                        /*
-
-                        // This is the one we DPS
-                        args: [
-                            'Creature-0-3111-2296-14971-188703-00006AB622',
-                            '"Protoform Barrier"',
-                            '0xa48',
-                            '0x0',
-                            'Creature-0-3111-2296-14971-188703-00006AB622',
-                            '"Protoform Barrier"',
-                            '0xa48',
-                            '0x0',
-                            '371597',
-                            '"Protoform Barrier"',
-                            '0x6a',
-                            'BUFF',
-                            '1901334',
-                            '0' // Zero, absorb amount is the prev arg
-                        ]
-
-                        // I assume this is the one we heal?
-                        args: [
-                            'Creature-0-3111-2296-14971-188703-00006AB622',
-                            '"Protoform Barrier"',
-                            '0xa48',
-                            '0x0',
-                            'Creature-0-3111-2296-14971-189773-00006AB622',
-                            '"Protoform Barrier"',
-                            '0xa18',
-                            '0x0',
-                            '371597',
-                            '"Protoform Barrier"',
-                            '0x6a',
-                            'BUFF',
-                            '0',
-                            '1901334' // Non-zero, I'm assuming this is a "heal" absorb
-                        ]
-
-                        */
-                        _healAbsorb: args[15]
-                    }
-                }
-            }
-
-        }
-
-        throw Error(`Unhandled event, ${args}`)
+        // Can be cleaned up further with pre-defined mappings, but
+        // this is just boilerplate.
+
+        if (event == "COMBAT_LOG_VERSION") { return COMBAT_LOG_VERSION(args, lineArgs) }
+        if (event == "COMBATANT_INFO") { return COMBATANT_INFO(args, lineArgs) }
+        if (event == "DAMAGE_SPLIT") { return DAMAGE_SPLIT(args, lineArgs) }
+        if (event == "DAMAGE_SHIELD") { return DAMAGE_SHIELD(args, lineArgs) }
+        if (event == "DAMAGE_SHIELD_MISSED") { return DAMAGE_SHIELD_MISSED(args, lineArgs) }
+        if (event == "EMOTE") { return EMOTE(args, lineArgs) }
+        if (event == "ENCOUNTER_END") { return ENCOUNTER_END(args, lineArgs) }
+        if (event == "ENCOUNTER_START") { return ENCOUNTER_START(args, lineArgs) }
+        if (event == "ENVIRONMENTAL_DAMAGE") { return ENVIRONMENTAL_DAMAGE(args, lineArgs) }
+        if (event == "ENCHANT_APPLIED") { return ENCHANT_APPLIED(args, lineArgs) }
+        if (event == "ENCHANT_REMOVED") { return ENCHANT_REMOVED(args, lineArgs) }
+        if (event == "MAP_CHANGE") { return MAP_CHANGE(args, lineArgs) }
+        if (event == "PARTY_KILL") { return PARTY_KILL(args, lineArgs) }
+        if (event == "RANGE_DAMAGE") { return RANGE_DAMAGE(args, lineArgs) }
+        if (event == "RANGE_MISSED") { return RANGE_MISSED(args, lineArgs) }
+        if (event == "SPELL_ABSORBED") { return SPELL_ABSORBED(args, lineArgs) }
+        if (event == "SPELL_AURA_APPLIED_DOSE") { return SPELL_AURA_APPLIED_DOSE(args, lineArgs) }
+        if (event == "SPELL_AURA_APPLIED") { return SPELL_AURA_APPLIED(args, lineArgs) }
+        if (event == "SPELL_AURA_BROKEN_SPELL") { return SPELL_AURA_BROKEN_SPELL(args, lineArgs) }
+        if (event == "SPELL_AURA_BROKEN") { return SPELL_AURA_BROKEN(args, lineArgs) }
+        if (event == "SPELL_AURA_REFRESH") { return SPELL_AURA_REFRESH(args, lineArgs) }
+        if (event == "SPELL_AURA_REMOVED_DOSE") { return SPELL_AURA_REMOVED_DOSE(args, lineArgs) }
+        if (event == "SPELL_AURA_REMOVED") { return SPELL_AURA_REMOVED(args, lineArgs) }
+        if (event == "SPELL_CREATE") { return SPELL_CREATE(args, lineArgs) }
+        if (event == "SPELL_CAST_FAILED") { return SPELL_CAST_FAILED(args, lineArgs) }
+        if (event == "SPELL_CAST_START") { return SPELL_CAST_START(args, lineArgs) }
+        if (event == "SPELL_CAST_SUCCESS") { return SPELL_CAST_SUCCESS(args, lineArgs) }
+        if (event == "SPELL_DAMAGE") { return SPELL_DAMAGE(args, lineArgs) }
+        if (event == "SPELL_DRAIN") { return SPELL_DRAIN(args, lineArgs) }
+        if (event == "SPELL_LEECH") { return SPELL_LEECH(args, lineArgs) }
+        if (event == "SPELL_DISPEL") { return SPELL_DISPEL(args, lineArgs) }
+        if (event == "SPELL_ENERGIZE") { return SPELL_ENERGIZE(args, lineArgs) }
+        if (event == "SPELL_EXTRA_ATTACKS") { return SPELL_EXTRA_ATTACKS(args, lineArgs) }
+        if (event == "SPELL_HEAL_ABSORBED") { return SPELL_HEAL_ABSORBED(args, lineArgs) }
+        if (event == "SPELL_HEAL") { return SPELL_HEAL(args, lineArgs) }
+        if (event == "SPELL_INSTAKILL") { return SPELL_INSTAKILL(args, lineArgs) }
+        if (event == "SPELL_INTERRUPT") { return SPELL_INTERRUPT(args, lineArgs) }
+        if (event == "SPELL_MISSED") { return SPELL_MISSED(args, lineArgs) }
+        if (event == "SPELL_PERIODIC_DAMAGE") { return SPELL_PERIODIC_DAMAGE(args, lineArgs) }
+        if (event == "SPELL_PERIODIC_ENERGIZE") { return SPELL_PERIODIC_ENERGIZE(args, lineArgs) }
+        if (event == "SPELL_PERIODIC_HEAL") { return SPELL_PERIODIC_HEAL(args, lineArgs) }
+        if (event == "SPELL_PERIODIC_MISSED") { return SPELL_PERIODIC_MISSED(args, lineArgs) }
+        if (event == "SPELL_RESURRECT") { return SPELL_RESURRECT(args, lineArgs) }
+        if (event == "SPELL_SUMMON") { return SPELL_SUMMON(args, lineArgs) }
+        if (event == "SPELL_STOLEN") { return SPELL_STOLEN(args, lineArgs) }
+        if (event == "SWING_DAMAGE_LANDED") { return SWING_DAMAGE_LANDED(args, lineArgs) }
+        if (event == "SWING_DAMAGE") { return SWING_DAMAGE(args, lineArgs) }
+        if (event == "SWING_MISSED") { return SWING_MISSED(args, lineArgs) }
+        if (event == "UNIT_DESTROYED") { return UNIT_DESTROYED(args, lineArgs) }
+        if (event == "UNIT_DIED") { return UNIT_DIED(args, lineArgs) }
+        if (event == "WORLD_MARKER_PLACED") { return WORLD_MARKER_PLACED(args, lineArgs) }
+        if (event == "WORLD_MARKER_REMOVED") { return WORLD_MARKER_REMOVED(args, lineArgs) }
+        if (event == "ZONE_CHANGE") { return ZONE_CHANGE(args, lineArgs) }
+        if (event == "SPELL_EMPOWER_START") { return SPELL_EMPOWER_START(args, lineArgs) }
+        if (event == "SPELL_EMPOWER_END") { return SPELL_EMPOWER_END(args, lineArgs) }
+        if (event == "SPELL_EMPOWER_INTERRUPT") { return SPELL_EMPOWER_INTERRUPT(args, lineArgs) }
+
+        // TODO: Should this be allowed or do we blow up? When is this
+        // allowed?
+        return undefined
     }
 
-}
-
-function anyOf(needle: string, ...haystack: string[]) {
-    return haystack.includes(needle)
 }
 
 function assertArgLen(args: any[], ...lengths: number[]) {
@@ -1462,16 +221,1362 @@ function assertAlwaysNilOrZero(args: any[], index: number) {
     return arg
 }
 
-function assertIsExactly(value: string, args: any[], index: number) {
-    const arg = args[index]
+function maybefy(arg: any): any | undefined {
+    if (arg === undefined) {
+        return null
+    } else {
+        return arg
+    }
+}
 
-    if (value !== arg) {
-        throw new ParserError({
-            code: ParserErrors.INVALID_ARG_VALUE.code,
-            message: ParserErrors.INVALID_ARG_VALUE.message(value, arg),
-            logLine: args.join(',')
-        })
+function extractBaseUnitProperties(args: string[], index: number) {
+    return {
+        sourceGuid: args[index],
+        sourceName: args[index + 1],
+        sourceFlags: args[index + 2],
+        sourceRaidFlags: args[index + 3],
+        destGuid: args[index + 4],
+        destName: args[index + 5],
+        destFlags: args[index + 6],
+        destRaidFlags: args[index + 7],
+    }
+}
+
+function extractAdvancedUnitProperties(args: string[], index: number) {
+    return {
+        infoGuid: args[index],
+        ownerGuid: args[index + 1],
+        currentHp: Number(args[index + 2]),
+        maxHp: Number(args[index + 3]),
+        attackPower: Number(args[index + 4]),
+        spellPower: Number(args[index + 5]),
+        armor: Number(args[index + 6]),
+        absorb: Number(args[index + 7]),
+        powerType: Number(args[index + 8]),
+        currentPower: Number(args[index + 9]),
+        maxPower: Number(args[index + 10]),
+        powerCost: Number(args[index + 11]),
+        positionX: Number(args[index + 12]),
+        positionY: Number(args[index + 13]),
+        uiMapId: Number(args[index + 14]),
+        facing: Number(args[index + 15]),
+        item_level: Number(args[index + 16]),
+    }
+}
+
+function extractMissedSuffixProperties(args: string[], index: number) {
+    return {
+        missType: args[index],
+        isOffHand: Number(args[index + 1]),
+        amountMissed: Number(args[index + 2]),
+        baseAmount: Number(args[index + 3]),
+        critical: Number(args[index + 4]),
+    }
+}
+
+function extractDamageSuffixProperties(args: string[], index: number) {
+    return {
+        amount: Number(args[index]),
+        baseAmount: Number(args[index + 1]),
+        overkill: Number(args[index + 2]),
+        school: Number(args[index + 3]),
+        resisted: assertAlwaysNilOrZero(args, index + 4),
+        blocked: Number(args[index + 5]),
+        absorbed: Number(args[index + 6]),
+        critical: Number(args[index + 7]),
+        glancing: assertAlwaysNilOrZero(args, index + 8),
+        crushing: assertAlwaysNilOrZero(args, index + 9),
+    }
+}
+
+function extractSpellPrefixProperties(args: string[], index: number) {
+    return {
+        spellId: Number(args[index]),
+        spellName: args[index + 1],
+        spellSchool: Number(args[index + 2]),
+    }
+}
+
+function extractHealSuffixProperties(args: string[], index: number) {
+    return {
+        amount: Number(args[index]),
+        baseAmount: Number(args[index + 1]),
+        overheal: Number(args[index + 2]),
+        absorbed: Number(args[index + 3]),
+        critical: Number(args[index + 4]),
+    }
+}
+
+function extractEnergizeSuffixProperties(args: string[], index: number) {
+    return {
+        amount: Number(args[index]),
+        overEnergize: Number(args[index + 1]),
+        powerType: Number(args[index + 2]),
+        maxPower: Number(args[index + 3]),
+    }
+}
+
+function ENCHANT_APPLIED(args: string[], extra: any) {
+    assertArgLen(args, 13)
+
+    let unitProperties = extractBaseUnitProperties(args, 2)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "ENCHANT_APPLIED" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        //Extracting args 2-9
+        ...unitProperties,
+
+        // Suffix
+        spellName: args[10],
+        itemId: args[11],
+        itemName: args[12],
+    }
+}
+
+function ENCHANT_REMOVED(args: string[], extra: any) {
+    assertArgLen(args, 13)
+
+    let unitProperties = extractBaseUnitProperties(args, 2)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "ENCHANT_REMOVED" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        //Extracting args 3-9
+        ...unitProperties,
+
+        // Suffix
+        spellName: args[10],
+        itemId: args[11],
+        itemName: args[12],
+    }
+}
+
+function COMBAT_LOG_VERSION(args: string[], extra: any) {
+    assertArgLen(args, 9)
+    console.log(extra)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "COMBAT_LOG_VERSION" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+        combatLogVersionKey: args[1],
+        combatLogVersionValue: args[2],
+        advancedCombatLogEnabledKey: args[3],
+        advancedCombatLogEnabledValue: args[4],
+        buildVersionKey: args[5],
+        buildVersionValue: args[6],
+        projectIdKey: args[7],
+        projectIdValue: args[8],
+    }
+}
+function COMBATANT_INFO(args: string[], extra: any) {
+    assertArgLen(args, 34)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "COMBATANT_INFO" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        //TODO: add more shit here.
+    }
+}
+function DAMAGE_SPLIT(args: string[], extra: any) {
+    assertArgLen(args, 40)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+    // args30-39
+    let damageSuffixProperties = extractDamageSuffixProperties(args, 30)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "DAMAGE_SPLIT" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-39
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+        ...damageSuffixProperties,
+    }
+}
+function DAMAGE_SHIELD(args: string[], extra: any) {
+    assertArgLen(args, 40)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+    // args30-39
+    let damageSuffixProperties = extractDamageSuffixProperties(args, 30)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "DAMAGE_SHIELD" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-39
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+        ...damageSuffixProperties,
+    }
+}
+function DAMAGE_SHIELD_MISSED(args: string[], extra: any) {
+    assertArgLen(args, 15, 16, 18) //Need to find exact size, didn't have a log with it
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-17 (or only 14/15 depending on size)
+    let missedSuffixProperties = extractMissedSuffixProperties(args, 13)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "DAMAGE_SHIELD_MISSED" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-17
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...missedSuffixProperties,
+    }
+}
+
+//Skipped
+function EMOTE(args: string[], extra: any) {
+    //assertArgLen(args, -1)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "EMOTE" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+    }
+}
+function ENCOUNTER_END(args: string[], extra: any) {
+    assertArgLen(args, 8)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "ENCOUNTER_END" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        encounterId: args[2],
+        encounterName: args[3],
+        difficultyId: args[4],
+        groupSize: args[5],
+        success: args[6],
+        fightTimeMs: args[7],
+    }
+}
+function ENCOUNTER_START(args: string[], extra: any) {
+    assertArgLen(args, 7)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "ENCOUNTER_START" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        encounterId: args[2],
+        encounterName: args[3],
+        difficultyId: args[4],
+        groupSize: args[5],
+        instanceId: args[6],
+    }
+}
+function ENVIRONMENTAL_DAMAGE(args: string[], extra: any) {
+    assertArgLen(args, 38)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-26
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 10)
+    // args28-37
+    let damageSuffixProperties = extractDamageSuffixProperties(args, 28)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "ENVIRONMENTAL_DAMAGE" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-37
+        ...baseUnitProperties,
+        ...advancedUnitProperties,
+        environmentalType: args[27],
+        ...damageSuffixProperties,
+    }
+}
+function MAP_CHANGE(args: string[], extra: any) {
+    assertArgLen(args, 8)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "MAP_CHANGE" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        uiMapId: args[2],
+        uiMapName: args[3],
+        x0: args[4],
+        x1: args[5],
+        y0: args[6],
+        y1: args[7],
+    }
+}
+function PARTY_KILL(args: string[], extra: any) {
+    assertArgLen(args, 11)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "PARTY_KILL" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-9
+        ...baseUnitProperties,
+
+        // Unclear exactly what this arg is, there's something
+        // about "unconsciousOnDeath"
+        recapId: args[10]
+    }
+}
+function RANGE_DAMAGE(args: string[], extra: any) {
+    assertArgLen(args, 40)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+    // args30-39
+    let damageSuffixProperties = extractDamageSuffixProperties(args, 30)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "RANGE_DAMAGE" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-39
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+        ...damageSuffixProperties,
+    }
+}
+function RANGE_MISSED(args: string[], extra: any) {
+    assertArgLen(args, 15, 16, 18) //Need to find exact size, didn't have a log with it
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-17 (or only 14/15 depending on size)
+    let missedSuffixProperties = extractMissedSuffixProperties(args, 13)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "RANGE_MISSED" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-17
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...missedSuffixProperties,
+    }
+}
+
+// This relatively new subevent fires in addition to
+// SWING_MISSED / SPELL_MISSED which already have the
+// "ABSORB" missType and same amount.
+//
+// It optionally includes the spell payload if triggered
+// from what would be SPELL_DAMAGE.
+function SPELL_ABSORBED(args: string[], extra: any) {
+    assertArgLen(args, 20, 23)
+
+    let spellAbsorbedProperties
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    if (args.length == 20) { //Absorb was not triggered by spell damage:
+        spellAbsorbedProperties = {
+            casterGuid: args[10],
+            casterName: args[11],
+            casterFlags: args[12],
+            casterRaidFlags: args[13],
+            absorbSpellId: args[14],
+            absorbSpellName: args[15],
+            absorbSpellSchool: args[16],
+            absorbAmount: args[17],
+            damageAmount: args[18],
+            critical: args[19],
+        }
+    } else { //Absorb was triggered by spell damage, includes spell payload:
+        // args10-12
+        let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+        spellAbsorbedProperties = {
+            ...spellPrefixProperties,
+            casterGuid: args[13],
+            casterName: args[14],
+            casterFlags: args[15],
+            casterRaidFlags: args[16],
+            absorbSpellId: args[17],
+            absorbSpellName: args[18],
+            absorbSpellSchool: args[19],
+            absorbAmount: args[20],
+            damageAmount: args[21],
+            critical: args[22],
+        }
     }
 
-    return arg
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_ABSORBED" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellAbsorbedProperties,
+    }
+}
+function SPELL_AURA_APPLIED_DOSE(args: string[], extra: any) {
+    assertArgLen(args, 14,15)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_AURA_APPLIED_DOSE" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        auraType: args[13],
+        amount: maybefy(args[14])
+    }
+}
+function SPELL_AURA_APPLIED(args: string[], extra: any) {
+    assertArgLen(args, 14,15)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_AURA_APPLIED" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        auraType: args[13],
+        amount: maybefy(args[14])
+
+    }
+}
+function SPELL_AURA_BROKEN_SPELL(args: string[], extra: any) {
+    assertArgLen(args, 17)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_AURA_BROKEN_SPELL" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+        extraSpellId: args[13],
+        extraSpellName: args[14],
+        extraSchool: args[15],
+        auraType: args[16],
+
+    }
+}
+function SPELL_AURA_BROKEN(args: string[], extra: any) {
+    assertArgLen(args, 14)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_AURA_BROKEN" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        auraType: args[13],
+
+    }
+}
+function SPELL_AURA_REFRESH(args: string[], extra: any) {
+    assertArgLen(args, 14,15)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_AURA_REFRESH" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        auraType: args[13],
+        amount: maybefy(args[14])
+
+    }
+}
+function SPELL_AURA_REMOVED_DOSE(args: string[], extra: any) {
+    assertArgLen(args, 14,15)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_AURA_REMOVED_DOSE" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        auraType: args[13],
+        amount: maybefy(args[14])
+
+    }
+}
+function SPELL_AURA_REMOVED(args: string[], extra: any) {
+    assertArgLen(args, 14,15)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_AURA_REMOVED" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        auraType: args[13],
+        amount: maybefy(args[14])
+    }
+}
+function SPELL_CREATE(args: string[], extra: any) {
+    assertArgLen(args, 13)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_CREATE" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+    }
+}
+
+//Only triggers for the player recording the log it seems
+function SPELL_CAST_FAILED(args: string[], extra: any) {
+    assertArgLen(args, 14)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_CAST_FAILED" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        failedType: args[13]
+
+    }
+}
+function SPELL_CAST_START(args: string[], extra: any) {
+    assertArgLen(args, 13)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_CAST_START" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+    }
+}
+function SPELL_CAST_SUCCESS(args: string[], extra: any) {
+    assertArgLen(args, 30)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_CAST_SUCCESS" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-29
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+    }
+}
+function SPELL_DAMAGE(args: string[], extra: any) {
+    assertArgLen(args, 40)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+    // args30-39
+    let damageSuffixProperties = extractDamageSuffixProperties(args, 30)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_DAMAGE" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-39
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+        ...damageSuffixProperties,
+    }
+}
+function SPELL_DRAIN(args: string[], extra: any) {
+    assertArgLen(args, 35)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_DRAIN" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-29
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+
+        amount: args[30],
+        extraPowerType: args[31],
+        extraAmount: args[32],
+        extraMaxPower: args[33],
+    }
+}
+function SPELL_LEECH(args: string[], extra: any) {
+    assertArgLen(args, 34)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_LEECH" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-29
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+
+        amount: args[30],
+        extraPowerType: args[31],
+        extraAmount: args[32],
+    }
+}
+function SPELL_DISPEL(args: string[], extra: any) {
+    assertArgLen(args, 17)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_DISPEL" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+        extraSpellId: args[13],
+        extraSpellName: args[14],
+        extraSchool: args[15],
+        auraType: args[16],
+
+    }
+}
+function SPELL_ENERGIZE(args: string[], extra: any) {
+    assertArgLen(args, 34)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_ENERGIZE" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-29
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+
+        amount: args[30],
+        overEnergize: args[31],
+        _powerType: args[32],
+        _maxPower: args[33],
+    }
+}
+function SPELL_EXTRA_ATTACKS(args: string[], extra: any) {
+    assertArgLen(args, 14)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_EXTRA_ATTACKS" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+        amount: args[13],
+
+    }
+}
+function SPELL_HEAL_ABSORBED(args: string[], extra: any) {
+    assertArgLen(args, 22)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_HEAL_ABSORBED" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+        casterGuid: args[13],
+        casterName: args[14],
+        casterFlags: args[15],
+        casterRaidFlags: args[16],
+        absorbSpellId: args[17],
+        absorbSpellName: args[18],
+        absorbSpellSchool: args[19],
+        amount: args[20],
+        baseAmount: args[21],
+
+    }
+}
+function SPELL_HEAL(args: string[], extra: any) {
+    assertArgLen(args, 35)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+    // args30-34
+    let healSuffixProperties = extractHealSuffixProperties(args, 30)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_HEAL" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-34
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+        ...healSuffixProperties,
+    }
+}
+function SPELL_INSTAKILL(args: string[], extra: any) {
+    assertArgLen(args, 14)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_INSTAKILL" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-12
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+        // Unclear exactly what this arg is, there's something
+        // about "unconsciousOnDeath"
+        recapId: args[13]
+    }
+}
+function SPELL_INTERRUPT(args: string[], extra: any) {
+    assertArgLen(args, 16)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_INTERRUPT" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-12
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+        // Refers to the interrupted spell
+        extraSpellId: args[13],
+        extraSpellName: args[14],
+        extraSchool: args[15],
+    }
+}
+function SPELL_MISSED(args: string[], extra: any) {
+    assertArgLen(args, 15, 16, 18) //Need to find exact size, didn't have a log with it
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-17 (or only 14/15 depending on size)
+    let missedSuffixProperties = extractMissedSuffixProperties(args, 13)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_MISSED" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-17
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...missedSuffixProperties,
+    }
+}
+function SPELL_PERIODIC_DAMAGE(args: string[], extra: any) {
+    assertArgLen(args, 40)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+    // args30-39
+    let damageSuffixProperties = extractDamageSuffixProperties(args, 30)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_PERIODIC_DAMAGE" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-39
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+        ...damageSuffixProperties,
+    }
+}
+function SPELL_PERIODIC_ENERGIZE(args: string[], extra: any) {
+    assertArgLen(args, 34)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_PERIODIC_ENERGIZE" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-29
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+
+        amount: args[30],
+        overEnergize: args[31],
+        _powerType: args[32],
+        _maxPower: args[33]
+    }
+}
+function SPELL_PERIODIC_HEAL(args: string[], extra: any) {
+    assertArgLen(args, 35)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-29
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 13)
+    // args30-34
+    let healSuffixProperties = extractHealSuffixProperties(args, 30)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_PERIODIC_HEAL" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-34
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...advancedUnitProperties,
+        ...healSuffixProperties,
+    }
+}
+function SPELL_PERIODIC_MISSED(args: string[], extra: any) {
+    assertArgLen(args, 15, 16, 18) //Need to find exact size, didn't have a log with it
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    // args13-17 (or only 14/15 depending on size)
+    let missedSuffixProperties = extractMissedSuffixProperties(args, 13)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_PERIODIC_MISSED" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-17
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        ...missedSuffixProperties,
+    }
+}
+function SPELL_RESURRECT(args: string[], extra: any) {
+    assertArgLen(args, 13)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_RESURRECT" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+    }
+}
+function SPELL_SUMMON(args: string[], extra: any) {
+    assertArgLen(args, 13)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_SUMMON" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+    }
+}
+function SPELL_STOLEN(args: string[], extra: any) {
+    assertArgLen(args, 17)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_STOLEN" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+        extraSpellId: args[13],
+        extraSpellName: args[14],
+        extraSchool: args[15],
+        auraType: args[16],
+
+    }
+}
+function SWING_DAMAGE_LANDED(args: string[], extra: any) {
+    assertArgLen(args, 37)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-26
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 10)
+    // args27-36
+    let damageSuffixProperties = extractDamageSuffixProperties(args, 27)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SWING_DAMAGE_LANDED" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-36
+        ...baseUnitProperties,
+        ...advancedUnitProperties,
+        ...damageSuffixProperties,
+    }
+}
+function SWING_DAMAGE(args: string[], extra: any) {
+    assertArgLen(args, 37)
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-26
+    let advancedUnitProperties = extractAdvancedUnitProperties(args, 10)
+    // args27-36
+    let damageSuffixProperties = extractDamageSuffixProperties(args, 27)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SWING_DAMAGE" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-36
+        ...baseUnitProperties,
+        ...advancedUnitProperties,
+        ...damageSuffixProperties,
+    }
+}
+function SWING_MISSED(args: string[], extra: any) {
+    assertArgLen(args, 12, 13, 15) //Need to find exact size, didn't have a log with it
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-14 (or only 11/12 depending on size)
+    let missedSuffixProperties = extractMissedSuffixProperties(args, 10)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SWING_MISSED" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-14
+        ...baseUnitProperties,
+        ...missedSuffixProperties,
+    }
+}
+function UNIT_DESTROYED(args: string[], extra: any) {
+    assertArgLen(args, 11)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "UNIT_DESTROYED" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-9
+        ...baseUnitProperties,
+
+        // Unclear exactly what this arg is, there's something
+        // about "unconsciousOnDeath"
+        recapId: args[10]
+    }
+}
+function UNIT_DIED(args: string[], extra: any) {
+    assertArgLen(args, 11)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "UNIT_DIED" as const,
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        // args2-9
+        ...baseUnitProperties,
+
+        // Unclear exactly what this arg is, there's something
+        // about "unconsciousOnDeath"
+        recapId: args[10]
+    }
+}
+function WORLD_MARKER_PLACED(args: string[], extra: any) {
+    assertArgLen(args, 6)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "WORLD_MARKER_PLACED" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+        instanceId: args[2],
+        marker: args[3],
+        x: args[4],
+        y: args[5],
+    }
+}
+function WORLD_MARKER_REMOVED(args: string[], extra: any) {
+    assertArgLen(args, 3)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "WORLD_MARKER_REMOVED" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+        marker: args[2]
+    }
+}
+function ZONE_CHANGE(args: string[], extra: any) {
+    assertArgLen(args, 5)
+
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "ZONE_CHANGE" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+        instanceId: args[2],
+        zoneName: args[3],
+        difficultyId: args[4],
+    }
+}
+function SPELL_EMPOWER_START(args: string[], extra: any) {
+    assertArgLen(args, 13)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_EMPOWER_START" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+
+    }
+}
+function SPELL_EMPOWER_END(args: string[], extra: any) {
+    assertArgLen(args, 14)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_EMPOWER_END" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        // Suffix
+        numChargesSpent: args[13] //Maybe? Idk tbh, just guessing at this point
+
+    }
+}
+function SPELL_EMPOWER_INTERRUPT(args: string[], extra: any) {
+    assertArgLen(args, 14)
+
+    // args2-9
+    let baseUnitProperties = extractBaseUnitProperties(args, 2)
+    // args10-12
+    let spellPrefixProperties = extractSpellPrefixProperties(args, 10)
+    return {
+        // This 'as const' is the magic keyword that makes
+        // discrimination work later. 
+        event: "SPELL_EMPOWER_INTERRUPT" as const,
+
+        date: args[0],
+        timestamp: extra.encounterTimeMs,
+
+        ...baseUnitProperties,
+        ...spellPrefixProperties,
+        // Suffix
+        failedType: args[13] //Maybe? Idk tbh, just guessing at this point
+
+    }
 }
