@@ -1,33 +1,126 @@
 import { LineArgs, ParserError, ParserErrors } from './log-parser'
 
-// Extract types dynamically from the extractor functions, see below.
-type MAPPED_EVENT =
-    ReturnType<typeof COMBAT_LOG_VERSION> | ReturnType<typeof COMBATANT_INFO> | ReturnType<typeof DAMAGE_SPLIT> |
-    ReturnType<typeof DAMAGE_SHIELD> | ReturnType<typeof DAMAGE_SHIELD_MISSED> | ReturnType<typeof EMOTE> |
-    ReturnType<typeof ENCOUNTER_END> | ReturnType<typeof ENCOUNTER_START> | ReturnType<typeof ENVIRONMENTAL_DAMAGE> |
-    ReturnType<typeof ENCHANT_APPLIED> | ReturnType<typeof ENCHANT_REMOVED> | ReturnType<typeof MAP_CHANGE> |
-    ReturnType<typeof PARTY_KILL> | ReturnType<typeof RANGE_DAMAGE> | ReturnType<typeof RANGE_MISSED> |
-    ReturnType<typeof SPELL_ABSORBED> | ReturnType<typeof SPELL_AURA_APPLIED_DOSE> | ReturnType<typeof SPELL_AURA_APPLIED> |
-    ReturnType<typeof SPELL_AURA_BROKEN_SPELL> | ReturnType<typeof SPELL_AURA_BROKEN> | ReturnType<typeof SPELL_AURA_REFRESH> |
-    ReturnType<typeof SPELL_AURA_REMOVED_DOSE> | ReturnType<typeof SPELL_AURA_REMOVED> | ReturnType<typeof SPELL_CREATE> |
-    ReturnType<typeof SPELL_CAST_FAILED> | ReturnType<typeof SPELL_CAST_START> | ReturnType<typeof SPELL_CAST_SUCCESS> |
-    ReturnType<typeof SPELL_DAMAGE> | ReturnType<typeof SPELL_DRAIN> | ReturnType<typeof SPELL_LEECH> |
-    ReturnType<typeof SPELL_DISPEL> | ReturnType<typeof SPELL_ENERGIZE> | ReturnType<typeof SPELL_EXTRA_ATTACKS> |
-    ReturnType<typeof SPELL_HEAL_ABSORBED> | ReturnType<typeof SPELL_HEAL> | ReturnType<typeof SPELL_INSTAKILL> |
-    ReturnType<typeof SPELL_INTERRUPT> | ReturnType<typeof SPELL_MISSED> | ReturnType<typeof SPELL_PERIODIC_DAMAGE> |
-    ReturnType<typeof SPELL_PERIODIC_ENERGIZE> | ReturnType<typeof SPELL_PERIODIC_HEAL> | ReturnType<typeof SPELL_PERIODIC_MISSED> |
-    ReturnType<typeof SPELL_RESURRECT> | ReturnType<typeof SPELL_SUMMON> | ReturnType<typeof SPELL_STOLEN> |
-    ReturnType<typeof SWING_DAMAGE_LANDED> | ReturnType<typeof SWING_DAMAGE> | ReturnType<typeof SWING_MISSED> |
-    ReturnType<typeof UNIT_DESTROYED> | ReturnType<typeof UNIT_DIED> | ReturnType<typeof WORLD_MARKER_PLACED> |
-    ReturnType<typeof WORLD_MARKER_REMOVED> | ReturnType<typeof ZONE_CHANGE> | ReturnType<typeof SPELL_EMPOWER_START> |
-    ReturnType<typeof SPELL_EMPOWER_END> | ReturnType<typeof SPELL_EMPOWER_INTERRUPT>
+export type COMBAT_LOG_VERSION = ReturnType<typeof COMBAT_LOG_VERSION>
+export type COMBATANT_INFO = ReturnType<typeof COMBATANT_INFO>
+export type DAMAGE_SPLIT = ReturnType<typeof DAMAGE_SPLIT>
+export type DAMAGE_SHIELD = ReturnType<typeof DAMAGE_SHIELD>
+export type DAMAGE_SHIELD_MISSED = ReturnType<typeof DAMAGE_SHIELD_MISSED>
+export type EMOTE = ReturnType<typeof EMOTE>
+export type ENCOUNTER_END = ReturnType<typeof ENCOUNTER_END>
+export type ENCOUNTER_START = ReturnType<typeof ENCOUNTER_START>
+export type ENVIRONMENTAL_DAMAGE = ReturnType<typeof ENVIRONMENTAL_DAMAGE>
+export type ENCHANT_APPLIED = ReturnType<typeof ENCHANT_APPLIED>
+export type ENCHANT_REMOVED = ReturnType<typeof ENCHANT_REMOVED>
+export type MAP_CHANGE = ReturnType<typeof MAP_CHANGE>
+export type PARTY_KILL = ReturnType<typeof PARTY_KILL>
+export type RANGE_DAMAGE = ReturnType<typeof RANGE_DAMAGE>
+export type RANGE_MISSED = ReturnType<typeof RANGE_MISSED>
+export type SPELL_ABSORBED = ReturnType<typeof SPELL_ABSORBED>
+export type SPELL_AURA_APPLIED_DOSE = ReturnType<typeof SPELL_AURA_APPLIED_DOSE>
+export type SPELL_AURA_APPLIED = ReturnType<typeof SPELL_AURA_APPLIED>
+export type SPELL_AURA_BROKEN_SPELL = ReturnType<typeof SPELL_AURA_BROKEN_SPELL>
+export type SPELL_AURA_BROKEN = ReturnType<typeof SPELL_AURA_BROKEN>
+export type SPELL_AURA_REFRESH = ReturnType<typeof SPELL_AURA_REFRESH>
+export type SPELL_AURA_REMOVED_DOSE = ReturnType<typeof SPELL_AURA_REMOVED_DOSE>
+export type SPELL_AURA_REMOVED = ReturnType<typeof SPELL_AURA_REMOVED>
+export type SPELL_CREATE = ReturnType<typeof SPELL_CREATE>
+export type SPELL_CAST_FAILED = ReturnType<typeof SPELL_CAST_FAILED>
+export type SPELL_CAST_START = ReturnType<typeof SPELL_CAST_START>
+export type SPELL_CAST_SUCCESS = ReturnType<typeof SPELL_CAST_SUCCESS>
+export type SPELL_DAMAGE = ReturnType<typeof SPELL_DAMAGE>
+export type SPELL_DRAIN = ReturnType<typeof SPELL_DRAIN>
+export type SPELL_LEECH = ReturnType<typeof SPELL_LEECH>
+export type SPELL_DISPEL = ReturnType<typeof SPELL_DISPEL>
+export type SPELL_ENERGIZE = ReturnType<typeof SPELL_ENERGIZE>
+export type SPELL_EXTRA_ATTACKS = ReturnType<typeof SPELL_EXTRA_ATTACKS>
+export type SPELL_HEAL_ABSORBED = ReturnType<typeof SPELL_HEAL_ABSORBED>
+export type SPELL_HEAL = ReturnType<typeof SPELL_HEAL>
+export type SPELL_INSTAKILL = ReturnType<typeof SPELL_INSTAKILL>
+export type SPELL_INTERRUPT = ReturnType<typeof SPELL_INTERRUPT>
+export type SPELL_MISSED = ReturnType<typeof SPELL_MISSED>
+export type SPELL_PERIODIC_DAMAGE = ReturnType<typeof SPELL_PERIODIC_DAMAGE>
+export type SPELL_PERIODIC_ENERGIZE = ReturnType<typeof SPELL_PERIODIC_ENERGIZE>
+export type SPELL_PERIODIC_HEAL = ReturnType<typeof SPELL_PERIODIC_HEAL>
+export type SPELL_PERIODIC_MISSED = ReturnType<typeof SPELL_PERIODIC_MISSED>
+export type SPELL_RESURRECT = ReturnType<typeof SPELL_RESURRECT>
+export type SPELL_SUMMON = ReturnType<typeof SPELL_SUMMON>
+export type SPELL_STOLEN = ReturnType<typeof SPELL_STOLEN>
+export type SWING_DAMAGE_LANDED = ReturnType<typeof SWING_DAMAGE_LANDED>
+export type SWING_DAMAGE = ReturnType<typeof SWING_DAMAGE>
+export type SWING_MISSED = ReturnType<typeof SWING_MISSED>
+export type UNIT_DESTROYED = ReturnType<typeof UNIT_DESTROYED>
+export type UNIT_DIED = ReturnType<typeof UNIT_DIED>
+export type WORLD_MARKER_PLACED = ReturnType<typeof WORLD_MARKER_PLACED>
+export type WORLD_MARKER_REMOVED = ReturnType<typeof WORLD_MARKER_REMOVED>
+export type ZONE_CHANGE = ReturnType<typeof ZONE_CHANGE>
+export type SPELL_EMPOWER_START = ReturnType<typeof SPELL_EMPOWER_START>
+export type SPELL_EMPOWER_END = ReturnType<typeof SPELL_EMPOWER_END>
+export type SPELL_EMPOWER_INTERRUPT = ReturnType<typeof SPELL_EMPOWER_INTERRUPT>
+
+export type MAPPED_EVENT =
+    COMBAT_LOG_VERSION |
+    COMBATANT_INFO |
+    DAMAGE_SPLIT |
+    DAMAGE_SHIELD |
+    DAMAGE_SHIELD_MISSED |
+    EMOTE |
+    ENCOUNTER_END |
+    ENCOUNTER_START |
+    ENVIRONMENTAL_DAMAGE |
+    ENCHANT_APPLIED |
+    ENCHANT_REMOVED |
+    MAP_CHANGE |
+    PARTY_KILL |
+    RANGE_DAMAGE |
+    RANGE_MISSED |
+    SPELL_ABSORBED |
+    SPELL_AURA_APPLIED_DOSE |
+    SPELL_AURA_APPLIED |
+    SPELL_AURA_BROKEN_SPELL |
+    SPELL_AURA_BROKEN |
+    SPELL_AURA_REFRESH |
+    SPELL_AURA_REMOVED_DOSE |
+    SPELL_AURA_REMOVED |
+    SPELL_CREATE |
+    SPELL_CAST_FAILED |
+    SPELL_CAST_START |
+    SPELL_CAST_SUCCESS |
+    SPELL_DAMAGE |
+    SPELL_DRAIN |
+    SPELL_LEECH |
+    SPELL_DISPEL |
+    SPELL_ENERGIZE |
+    SPELL_EXTRA_ATTACKS |
+    SPELL_HEAL_ABSORBED |
+    SPELL_HEAL |
+    SPELL_INSTAKILL |
+    SPELL_INTERRUPT |
+    SPELL_MISSED |
+    SPELL_PERIODIC_DAMAGE |
+    SPELL_PERIODIC_ENERGIZE |
+    SPELL_PERIODIC_HEAL |
+    SPELL_PERIODIC_MISSED |
+    SPELL_RESURRECT |
+    SPELL_SUMMON |
+    SPELL_STOLEN |
+    SWING_DAMAGE_LANDED |
+    SWING_DAMAGE |
+    SWING_MISSED |
+    UNIT_DESTROYED |
+    UNIT_DIED |
+    WORLD_MARKER_PLACED |
+    WORLD_MARKER_REMOVED |
+    ZONE_CHANGE |
+    SPELL_EMPOWER_START |
+    SPELL_EMPOWER_END |
+    SPELL_EMPOWER_INTERRUPT
 
 
 // ---------------------------------------------------------------------------------------
 
 export class EventMapper {
 
-    public map(lineArgs: LineArgs): MAPPED_EVENT | null {
+    public map(lineArgs: LineArgs): MAPPED_EVENT | undefined {
 
         let event = lineArgs.event
 
@@ -97,8 +190,9 @@ export class EventMapper {
         if (event == "SPELL_EMPOWER_END") { return SPELL_EMPOWER_END(args, lineArgs.encounterTimeMs) }
         if (event == "SPELL_EMPOWER_INTERRUPT") { return SPELL_EMPOWER_INTERRUPT(args, lineArgs.encounterTimeMs) }
 
-
-        return null
+        // TODO: Should this be allowed or do we blow up? When is this
+        // allowed?
+        return undefined
     }
 
 }
@@ -235,7 +329,7 @@ function ENCHANT_APPLIED(args: string[], extra: any) {
         spellName: args[10],
         itemId: args[11],
         itemName: args[12],
-    };
+    }
 }
 
 function ENCHANT_REMOVED(args: string[], extra: any) {
@@ -258,7 +352,7 @@ function ENCHANT_REMOVED(args: string[], extra: any) {
         spellName: args[10],
         itemId: args[11],
         itemName: args[12],
-    };
+    }
 }
 
 function COMBAT_LOG_VERSION(args: string[], extra: any) {
@@ -538,7 +632,7 @@ function RANGE_MISSED(args: string[], extra: any) {
 function SPELL_ABSORBED(args: string[], extra: any) {
     assertArgLen(args, 20, 23)
 
-    let spellAbsorbedProperties;
+    let spellAbsorbedProperties
     // args2-9
     let baseUnitProperties = extractBaseUnitProperties(args, 2)
     if (args.length == 20) { //Absorb was not triggered by spell damage:
