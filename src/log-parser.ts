@@ -175,7 +175,7 @@ export class LogParser<P> {
         } else if (event == "ENCOUNTER_END") {
 
             assertDefined(this.currentEncounterStartMs)
-            encounterTimeMs = currentMs - this.currentEncounterStartMs
+            encounterTimeMs = currentMs - this.currentEncounterStartMs! // "Possibly null" - log is invalid if that happens, so whatever, tired of seeing this error tbh
             this.currentEncounterStartMs = null
 
         } else if (this.currentEncounterStartMs != null) {
