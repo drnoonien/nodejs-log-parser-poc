@@ -1,6 +1,7 @@
 import { mapCombatantInfoArgs } from './combatant-info-mapper'
 import { eventMapperContext } from './event-mapper-context'
 import { LineArgs, ParserError, ParserErrors } from './log-parser'
+import {PowerType, baseEvent,baseUnitEvent,missedEvent,advancedUnitEvent,damageSuffixEvent,SpellPrefixEvent,EnergizeSuffixEvent,HealSuffixEvent,baseDeathEvent} from './event-mapper-types'
 
 const CUSTOM_EVENTS = {
     C_DAMAGE_SPLIT: "SPELL_DAMAGE_SPLIT_C",
@@ -8,47 +9,8 @@ const CUSTOM_EVENTS = {
     C_DAMAGE_SHIELD_MISSED: "SPELL_DAMAGE_SHIELD_MISSED_C",
 }
 
-enum PowerType {
-    HealthCost = -2,
-    None = -1,
-    Mana = 0,
-    Rage = 1,
-    Focus = 2,
-    Energy = 3,
-    ComboPoints = 4,
-    Runes = 5,
-    RunicPower = 6,
-    SoulShards = 7,
-    LunarPower = 8,
-    HolyPower = 9,
-    Alternate = 10, // Boss specific stuff, think cho'gall corruption level
-    Maelstrom = 11,
-    Chi = 12,
-    Insanity = 13,
-    Obsolete = 14, //Warlock remnant
-    Obsolete2 = 15, //Warlock remnant
-    ArcaneCharges = 16,
-    Fury = 17,
-    Pain = 18,
-    Essence = 19,
-    RuneBlood = 20,
-    RuneFrost = 21,
-    RuneUnholy = 22,
-    NumPowerTypes = 23
-}
-/*
-TODO:
-enum SchoolType {
-    Physical = 1,
-    Holy = 2,
-    Holystrike = 3,
-    Fire = 4,
-    Flamestrike = 5,
-
-}
-*/
-
-type Event = CombatLogVersion | CombatantInfo | DamageSplit
+type Event = 
+    | CombatLogVersion | CombatantInfo | DamageSplit
     | DamageShield | DamageShieldMissed| Emote 
     | EncounterEnd | EncounterStart | EnvironmentalDamage
     | EnchantApplied | EnchantRemoved | MapChange | PartyKill
@@ -64,88 +26,6 @@ type Event = CombatLogVersion | CombatantInfo | DamageSplit
     | SwingDamageLanded | SwingDamage | SwingMissed | UnitDestroyed 
     | UnitDied | WorldMarkerPlaced | WorldMarkerRemoved | ZoneChange
     | SpellEmpowerStart | SpellEmpowerEnd | SpellEmpowerInterrupt
-
-type baseEvent = {
-    date: string
-    timestamp: string
-}
-
-type baseUnitEvent = baseEvent & {
-    sourceGuid: string
-    sourceName: string
-    sourceFlags: number
-    sourceRaidFlags: number
-    destGuid: string
-    destName: string
-    destFlags: number
-    destRaidFlags: number
-}
-
-type missedEvent = {
-    missType: string
-    isOffHand?: number
-    amountMissed?: number
-    baseAmount?: number
-    critical?: number
-}
-
-type advancedUnitEvent = baseUnitEvent & {
-    infoGuid: string
-    ownerGuid: string
-    currentHp: number
-    maxHp: number
-    attackPower: number
-    spellPower: number
-    armor: number
-    absorb: number
-    powerType: PowerType
-    currentPower: number
-    maxPower: number
-    powerCost: number
-    positionX: number
-    positionY: number
-    uiMapId: number
-    facing: number
-    item_level: number //TODO: This is still documented as "item level" for players, but level for NPCs
-}
-
-type damageSuffixEvent = {
-    amount: number
-    baseAmount: number
-    overkill: number
-    school: number
-    resisted?: number
-    blocked?: number
-    absorbed?: number
-    critical?: number
-    glancing?: number
-    crushing?: number
-}
-
-type SpellPrefixEvent =  {
-    spellId: number
-    spellName: string
-    spellSchool: number
-}
-
-type EnergizeSuffixEvent =  {
-    amount: number
-    overEnergize: number
-    powerType: PowerType
-    maxPower: number
-}
-type HealSuffixEvent =  {
-    amount: number
-    baseAmount: number
-    overheal: number
-    absorbed: number
-    critical?: number
-}
-
-type baseDeathEvent = baseUnitEvent & {
-    recapID?: number //guessing type tbh, also maybe not present it seems?
-    unconsciousOnDeath: number //Guessing it's a bool expressed a 0 or 1, real name is #unconsciousOnDeath
-};
 
 type CombatLogVersion = baseEvent & {
     event: "COMBAT_LOG_VERSION"
@@ -490,14 +370,14 @@ export class EventMapper {
         return this.map(lineArgs)
     }
 
-    public map(lineArgs: LineArgs): EventLine {
+    public map(lineArgs: LineArgs): Event {
 
         // TODO: This has to be cleared before we exit from here, but
         // we've got 4 million return statements...
         eventMapperContext.setLineArgs(lineArgs)
 
         let event = lineArgs.event
-        let data: EventLine
+        let data: Event
 
         const args = [
             lineArgs.dateTime,
@@ -512,19 +392,19 @@ export class EventMapper {
                 // Base
                 date: args[0],
                 timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
+                event: "ENCHANT_APPLIED",
                 sourceGuid: args[2],
                 sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
+                sourceFlags: Number(args[4]),
+                sourceRaidFlags: Number(args[5]),
                 destGuid: args[6],
                 destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
+                destFlags: Number(args[8]),
+                destRaidFlags: Number(args[9]),
 
                 // Suffix
                 spellName: args[10],
-                itemId: args[11],
+                itemId: Number(args[11]),
                 itemName: args[12],
             }
         }
