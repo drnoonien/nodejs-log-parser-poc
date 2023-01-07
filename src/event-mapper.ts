@@ -230,11 +230,22 @@ type RangeDamage = advancedUnitEvent & spellPrefixEvent & damageSuffixEvent & {
 type RangeMissed = baseUnitEvent & spellPrefixEvent & missedEvent & {
     event: "RANGE_MISSED"
 };
-type SpellAbsorbed = baseUnitEvent & damageSuffixEvent & {
+
+type SpellAbsorbed = baseUnitEvent & {
     event: "SPELL_ABSORBED"
     spellId?: number
-    spellName: string
-    spellSchool: number
+    spellName?: string
+    spellSchool?: number
+    casterGuid: string,
+    casterName: string,
+    casterFlags: number,
+    casterRaidFlags: number,
+    absorbSpellId: number,
+    absorbSpellName: string,
+    absorbSpellSchool: number,
+    absorbAmount: number,
+    damageAmount: number,
+    critical: number,
 };
 type SpellAuraAppliedDose = baseUnitEvent & spellPrefixEvent & {
     event: "SPELL_AURA_APPLIED_DOSE"
@@ -516,6 +527,7 @@ export class EventMapper {
         let damageSuffixEvent: damageSuffixEvent;
         let spellPrefixEvent: spellPrefixEvent;
         let EnergizeSuffixEvent: EnergizeSuffixEvent;
+        let HealSuffixEvent: HealSuffixEvent;
         var baseEvent: baseEvent = {
             date: args[0],
             timestamp: `${lineArgs.encounterTimeMs}`
@@ -533,7 +545,7 @@ export class EventMapper {
                 destFlags: Number(args[8]),
                 destRaidFlags: Number(args[9]),
             }
-            if(anyOf(event, ...advancedUnitTypes)) {
+            if (anyOf(event, ...advancedUnitTypes)) {
                 advancedUnitEvent = {
                     ...baseUnitEvent,
                     infoGuid: args[13],
@@ -555,7 +567,7 @@ export class EventMapper {
                     item_level: Number(args[29]),
                 }
             }
-            if(anyOf(event, ...baseDeathTypes)) {
+            if (anyOf(event, ...baseDeathTypes)) {
                 baseDeathEvent = {
                     ...baseUnitEvent,
                     unconsciousOnDeath: Number(args[10]), //Unsure here tbh
@@ -565,30 +577,49 @@ export class EventMapper {
 
         if (anyOf(event, ...missedSuffixTypes)) {
             missedEvent = {
-                missType: args[10],
-                isOffHand: Number(args[11]),
-                amountMissed: Number(args[12]),
-                baseAmount: Number(args[13]),
-                critical: Number(args[14]),
+                missType: args[13],
+                isOffHand: Number(args[14]),
+                amountMissed: Number(args[15]),
+                baseAmount: Number(args[16]),
+                critical: Number(args[17]),
             }
         }
 
-        if(anyOf(event, ...damageSuffixTypes)) {
+        if (anyOf(event, ...damageSuffixTypes) && !anyOf(event, ...spellPrefixTypes) && event != EVENTS.SPELL_ABSORBED) {
+            //Some events add parameters in the middle of the event, requiring an offset
+            let extraOffset = 0 
+            if(event == EVENTS.ENVIRONMENTAL_DAMAGE) {
+                extraOffset = 1
+            }
             damageSuffixEvent = {
-                amount: Number(args[28]),
-                baseAmount: Number(args[29]),
-                overkill: Number(args[30]),
-                school: Number(args[31]),
-                resisted: assertAlwaysNilOrZero(args, 32),
-                blocked: Number(args[33]),
-                absorbed: Number(args[34]),
-                critical: Number(args[35]), // nil or 1
-                glancing: assertAlwaysNilOrZero(args, 36),
-                crushing: assertAlwaysNilOrZero(args, 37),
+                amount: Number(args[27+extraOffset]),
+                baseAmount: Number(args[28+extraOffset]),
+                overkill: Number(args[29+extraOffset]),
+                school: Number(args[30+extraOffset]),
+                resisted: assertAlwaysNilOrZero(args, 31+extraOffset),
+                blocked: Number(args[32+extraOffset]),
+                absorbed: Number(args[33+extraOffset]),
+                critical: Number(args[34+extraOffset]), // nil or 1
+                glancing: assertAlwaysNilOrZero(args, 35+extraOffset),
+                crushing: assertAlwaysNilOrZero(args, 36+extraOffset),
+            }
+        }
+        if (anyOf(event, ...damageSuffixTypes) && anyOf(event, ...spellPrefixTypes)) {
+            damageSuffixEvent = {
+                amount: Number(args[30]),
+                baseAmount: Number(args[31]),
+                overkill: Number(args[32]),
+                school: Number(args[33]),
+                resisted: assertAlwaysNilOrZero(args, 34),
+                blocked: Number(args[35]),
+                absorbed: Number(args[36]),
+                critical: Number(args[37]), // nil or 1
+                glancing: assertAlwaysNilOrZero(args, 38),
+                crushing: assertAlwaysNilOrZero(args, 39),
             }
         }
 
-        if(anyOf(event, ...spellPrefixTypes)) {
+        if (anyOf(event, ...spellPrefixTypes)) {
             spellPrefixEvent = {
                 spellId: Number(args[10]),
                 spellName: args[11],
@@ -596,1103 +627,536 @@ export class EventMapper {
             }
         }
 
-        if(anyOf(event, ...energizeSuffixTypes)) {
+        if (anyOf(event, ...energizeSuffixTypes)) {
             EnergizeSuffixEvent = {
-                ...spellPrefixEvent,
-                
+                amount: Number(args[30]),
+                overEnergize: Number(args[31]),
+                powerType: Number(args[32]),
+                maxPower: Number(args[33]),
             }
         }
 
-        
+        if (anyOf(event, ...healSuffixTypes)) {
+            HealSuffixEvent = {
+                amount: Number(args[30]),
+                baseAmount: Number(args[31]),
+                overheal: Number(args[32]), // 0 or amount
+                absorbed: Number(args[33]), // 0 or amount
+                critical: Number(args[34]), // nil or 1
+            }
+        }
 
         switch (event) {
             case EVENTS.ENCHANT_APPLIED:
                 return {
-                    ...baseEvent,
-                    ...baseUnitEvent,
-                    event: "ENCHANT_APPLIED",
+                    ...baseUnitEvent!,
+                    spellName: args[10],
+                    itemId: Number(args[11]),
+                    itemName: args[12],
+                    event: "ENCHANT_APPLIED"
                 };
             case EVENTS.ENCHANT_REMOVED:
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    spellName: args[10],
+                    itemId: Number(args[11]),
+                    itemName: args[12],
+                    event: "ENCHANT_REMOVED"
+                };
+            case EVENTS.COMBAT_LOG_VERSION:
+                return {
+                    ...baseEvent,
+                    event: "COMBAT_LOG_VERSION",
+                    combatLogVersionKey: args[1],
+                    combatLogVersionValue: Number(args[2]),
+                    advancedCombatLogEnabledKey: args[3],
+                    advancedCombatLogEnabledValue: Number(args[4]),
+                    buildVersionKey: args[5],
+                    buildVersionValue: Number(args[6]),
+                    projectIdKey: args[7],
+                    projectIdValue: Number(args[8]),
+                };
             case EVENTS.COMBATANT_INFO:
                 // Handle COMBATANT_INFO event
-                return;
+                return {
+                    ...baseEvent,
+                    event: "COMBATANT_INFO",
+                };
             case EVENTS.DAMAGE_SPLIT:
                 // Handle DAMAGE_SPLIT event
-                return;
+                return {
+                    ...advancedUnitEvent!,
+                    ...spellPrefixEvent!,
+                    ...damageSuffixEvent!,
+                    event: "DAMAGE_SPLIT"
+                };
             case EVENTS.DAMAGE_SHIELD:
                 // Handle DAMAGE_SHIELD event
-                return;
+                return {
+                    ...advancedUnitEvent!,
+                    ...spellPrefixEvent!,
+                    ...damageSuffixEvent!,
+                    event: "DAMAGE_SHIELD"
+                };
             case EVENTS.DAMAGE_SHIELD_MISSED:
                 // Handle DAMAGE_SHIELD_MISSED event
-                return;
+                return {
+                    ...advancedUnitEvent!,
+                    ...spellPrefixEvent!,
+                    ...missedEvent!,
+                    event: "DAMAGE_SHIELD_MISSED"
+                };
             case EVENTS.EMOTE:
                 // Handle EMOTE event
-                return;
+                return {
+                    ...baseEvent,
+                    event: "EMOTE"
+                };
             case EVENTS.ENCOUNTER_END:
                 // Handle ENCOUNTER_END event
-                return;
+                return {
+                    ...baseEvent,
+                    event: "ENCOUNTER_END",
+                    encounterId: Number(args[2]),
+                    encounterName: args[3],
+                    difficultyId: Number(args[4]),
+                    groupSize: Number(args[5]),
+                    success: Number(args[6]),
+                    fightTimeMs: Number(args[7]),
+                };
             case EVENTS.ENCOUNTER_START:
                 // Handle ENCOUNTER_START event
-                return;
+                return {
+                    ...baseEvent,
+                    event: "ENCOUNTER_START",
+                    encounterId: Number(args[2]),
+                    encounterName: args[3],
+                    difficultyId: Number(args[4]),
+                    groupSize: Number(args[5]),
+                    instanceId: Number(args[6]),
+                };
             case EVENTS.ENVIRONMENTAL_DAMAGE:
                 // Handle ENVIRONMENTAL_DAMAGE event
-                return;
+                return {
+                    ...advancedUnitEvent!,
+                    ...damageSuffixEvent!,
+                    event: "ENVIRONMENTAL_DAMAGE",
+                    environmentalType: args[27],
+                };
             case EVENTS.MAP_CHANGE:
                 // Handle MAP_CHANGE event
-                return;
+                return {
+                    ...baseEvent,
+                    event: "MAP_CHANGE",
+                    uiMapId: Number(args[2]),
+                    uiMapName: args[3],
+                    x0: Number(args[4]),
+                    x1: Number(args[5]),
+                    y0: Number(args[6]),
+                    y1: Number(args[7]),
+                };
             case EVENTS.PARTY_KILL:
                 // Handle PARTY_KILL event
-                return;
+                return {
+                    ...baseDeathEvent!,
+                    event: "PARTY_KILL"
+                };
             case EVENTS.RANGE_DAMAGE:
                 // Handle RANGE_DAMAGE event
-                return;
+                return {
+                    ...advancedUnitEvent!,
+                    ...damageSuffixEvent!,
+                    ...spellPrefixEvent!,
+                    event: "RANGE_DAMAGE",
+                };
             case EVENTS.RANGE_MISSED:
                 // Handle RANGE_MISSED event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...missedEvent!,
+                    ...spellPrefixEvent!,
+                    event: "RANGE_MISSED",
+                };
             case EVENTS.SPELL_ABSORBED:
                 // Handle SPELL_ABSORBED event
-                return;
+                let isFromSpell = args[21] != undefined;
+                if(isFromSpell) {
+                    return {
+                        ...baseUnitEvent!,
+                        event: "SPELL_ABSORBED",
+                        // Extra spell data
+                        spellId: Number(args[10]),
+                        spellName: args[11],
+                        spellSchool: Number(args[12]),
+
+                        // Suffix
+                        casterGuid: args[13],
+                        casterName: args[14],
+                        casterFlags: Number(args[15]),
+                        casterRaidFlags: Number(args[16]),
+                        absorbSpellId: Number(args[17]),
+                        absorbSpellName: args[18],
+                        absorbSpellSchool: Number(args[19]),
+                        absorbAmount: Number(args[20]),
+                        damageAmount: Number(args[21]),
+                        critical: Number(args[22]),
+                    };
+                } else {
+                    return { 
+                        ...baseUnitEvent!,
+                        event: "SPELL_ABSORBED",
+                        casterGuid: args[10],
+                        casterName: args[11],
+                        casterFlags: Number(args[12]),
+                        casterRaidFlags: Number(args[13]),
+                        absorbSpellId: Number(args[14]),
+                        absorbSpellName: args[15],
+                        absorbSpellSchool: Number(args[16]),
+                        absorbAmount: Number(args[17]),
+                        damageAmount: Number(args[18]),
+                        critical: Number(args[19]),
+                    };
+                }
             case EVENTS.SPELL_AURA_APPLIED_DOSE:
                 // Handle SPELL_AURA_APPLIED_DOSE event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_AURA_APPLIED_DOSE",
+                    auraType: args[13],
+                    amount: Number(args[14]),
+                };
             case EVENTS.SPELL_AURA_APPLIED:
                 // Handle SPELL_AURA_APPLIED event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_AURA_APPLIED",
+                    auraType: args[13],
+                    amount: Number(args[14]),
+                };
             case EVENTS.SPELL_AURA_BROKEN_SPELL:
                 // Handle SPELL_AURA_BROKEN_SPELL event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_AURA_BROKEN_SPELL",
+                    extraSpellId: Number(args[13]),
+                    extraSpellName: args[14],
+                    extraSchool: Number(args[15]),
+                    auraType: args[16],
+                };
             case EVENTS.SPELL_AURA_BROKEN:
                 // Handle SPELL_AURA_BROKEN event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_AURA_BROKEN",
+                    auraType: args[13],
+                };
             case EVENTS.SPELL_AURA_REFRESH:
                 // Handle SPELL_AURA_REFRESH event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_AURA_REFRESH",
+                    auraType: args[13],
+                    amount: Number(args[14]),
+                };
             case EVENTS.SPELL_AURA_REMOVED_DOSE:
                 // Handle SPELL_AURA_REMOVED_DOSE event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_AURA_REMOVED_DOSE",
+                    auraType: args[13],
+                    amount: Number(args[14]),
+                };
             case EVENTS.SPELL_AURA_REMOVED:
                 // Handle SPELL_AURA_REMOVED event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_AURA_REMOVED",
+                    auraType: args[13],
+                    amount: Number(args[14]),
+                };
             case EVENTS.SPELL_CREATE:
                 // Handle SPELL_CREATE event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_CREATE",
+                };
             case EVENTS.SPELL_CAST_FAILED:
                 // Handle SPELL_CAST_FAILED event
-                return;
+                return {
+                    ...baseEvent!,
+                    event: "SPELL_CAST_FAILED",
+                };
             case EVENTS.SPELL_CAST_START:
                 // Handle SPELL_CAST_START event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_CAST_START",
+                };
             case EVENTS.SPELL_CAST_SUCCESS:
                 // Handle SPELL_CAST_SUCCESS event
-                return;
+                return {
+                    ...advancedUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_CAST_SUCCESS",
+                };
             case EVENTS.SPELL_DAMAGE:
                 // Handle SPELL_DAMAGE event
-                return;
+                return {
+                    ...advancedUnitEvent!,
+                    ...damageSuffixEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_DAMAGE",
+                };
             case EVENTS.SPELL_DRAIN:
                 // Handle SPELL_DRAIN event
-                return;
+                return {
+                    ...advancedUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_DRAIN",
+                    amount: Number(args[30]),
+                    extraPowerType: Number(args[31]),
+                    extraAmount: Number(args[32]),
+                    extraMaxPower: Number(args[33]),
+                };
             case EVENTS.SPELL_LEECH:
                 // Handle SPELL_LEECH event
-                return;
+                return {
+                    ...advancedUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_LEECH",
+                    amount: Number(args[30]),
+                    extraPowerType: Number(args[31]),
+                    extraAmount: Number(args[32]),
+                };
             case EVENTS.SPELL_DISPEL:
                 // Handle SPELL_DISPEL event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_DISPEL",
+                    extraSpellId: Number(args[13]),
+                    extraSpellName: args[14],
+                    extraSchool: Number(args[15]),
+                    auraType: args[16],
+                };
             case EVENTS.SPELL_ENERGIZE:
                 // Handle SPELL_ENERGIZE event
-                return;
+                return {
+                    ...advancedUnitEvent!,
+                    ...spellPrefixEvent!,
+                    ...EnergizeSuffixEvent!,
+                    event: "SPELL_ENERGIZE"
+                };
             case EVENTS.SPELL_EXTRA_ATTACKS:
                 // Handle SPELL_EXTRA_ATTACKS event
-                return;
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_DISPEL",
+                    extraSpellId: Number(args[13]),
+                    extraSpellName: args[14],
+                    extraSchool: Number(args[15]),
+                    auraType: args[16],
+                };
             case EVENTS.SPELL_HEAL_ABSORBED:
                 // Handle SPELL_HEAL_ABSORBED event
-                return;
-            case EVENTS.SPELL_HEAL:
-                // Handle SPELL_HEAL event
-                return;
-            case EVENTS.SPELL_INSTAKILL:
-                // Handle SPELL_INSTAKILL event
-                return;
-            case EVENTS.SPELL_INTERRUPT:
-                // Handle SPELL_INTERRUPT event
-                return;
-            case EVENTS.SPELL_MISSED:
-                // Handle SPELL_MISSED event
-                return;
-            case EVENTS.SPELL_PERIODIC_DAMAGE:
-                // Handle SPELL_PERIODIC_DAMAGE event
-                return;
-            case EVENTS.SPELL_PERIODIC_ENERGIZE:
-                // Handle SPELL_PERIODIC_ENERGIZE event
-                return;
-            case EVENTS.SPELL_PERIODIC_HEAL:
-                // Handle SPELL_PERIODIC_HEAL event
-                return;
-            case EVENTS.SPELL_PERIODIC_MISSED:
-                // Handle SPELL_PERIODIC_MISSED event
-                return;
-            case EVENTS.SPELL_RESURRECT:
-                // Handle SPELL_RESURRECT event
-                return;
-            case EVENTS.SPELL_SUMMON:
-                // Handle SPELL_SUMMON event
-                return;
-            case EVENTS.SPELL_STOLEN:
-                // Handle SPELL_STOLEN event
-                return;
-            case EVENTS.SWING_DAMAGE_LANDED:
-                // Handle SWING_DAMAGE_LANDED event
-                return;
-            case EVENTS.SWING_DAMAGE:
-                // Handle SWING_DAMAGE event
-                return;
-            case EVENTS.SWING_MISSED:
-                // Handle SWING_MISSED event
-                return;
-            case EVENTS.UNIT_DESTROYED:
-                // Handle UNIT_DESTROYED event
-                return;
-            case EVENTS.UNIT_DIED:
-                // Handle UNIT_DIED event
-                return;
-            case EVENTS.WORLD_MARKER_PLACED:
-                // Handle WORLD_MARKER_PLACED event
-                return;
-            case EVENTS.WORLD_MARKER_REMOVED:
-                // Handle WORLD_MARKER_REMOVED event
-                return;
-            case EVENTS.ZONE_CHANGE:
-                // Handle ZONE_CHANGE event
-                return;
-
-
-        }
-
-        if (anyOf(event, EVENTS.ENCHANT_APPLIED, EVENTS.ENCHANT_REMOVED)) {
-            assertArgLen(args, 13)
-
-            return {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: "ENCHANT_APPLIED",
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: Number(args[4]),
-                sourceRaidFlags: Number(args[5]),
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: Number(args[8]),
-                destRaidFlags: Number(args[9]),
-
-                // Suffix
-                spellName: args[10],
-                itemId: Number(args[11]),
-                itemName: args[12],
-            }
-        }
-
-        if (event == EVENTS.WORLD_MARKER_PLACED) {
-            assertArgLen(args, 6)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                instanceId: args[2],
-                marker: args[3],
-                x: args[4],
-                y: args[5],
-            }
-        }
-
-        if (event == EVENTS.WORLD_MARKER_REMOVED) {
-            assertArgLen(args, 3)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                marker: args[2]
-            }
-        }
-
-        if (event == EVENTS.COMBATANT_INFO) {
-            assertArgLen(args, 35)
-
-            const combatantInfo = mapCombatantInfoArgs(args)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                faction: args[3],
-                strength: args[4],
-                agility: args[5],
-                stamina: args[6],
-                intellect: args[7],
-                dodge: args[8],
-                parry: args[9],
-                block: args[10],
-                critMelee: args[11],
-                critRanged: args[12],
-                critSpell: args[13],
-                speed: args[14],
-                leech: args[15],
-                hasteMelee: args[16],
-                hasteRanged: args[17],
-                hasteSpell: args[18],
-                avoidance: args[19],
-                mastery: args[20],
-                versatilityDamageDone: args[21],
-                versatilityHealingDone: args[22],
-                versatilityDamageTaken: args[23],
-                armor: args[24],
-                specId: args[25],
-                talentInfo: combatantInfo.talentInfo,
-                pvpTalentInfo: combatantInfo.pvpTalentInfo,
-                borrowedPowerInfo: args[28],
-                gearInfo: combatantInfo.gearInfo,
-                interestingAuras: args[30],
-            }
-        }
-
-        if (event == EVENTS.ENCOUNTER_START) {
-            assertArgLen(args, 7)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                encounterId: args[2],
-                encounterName: args[3],
-                difficultyId: args[4],
-                groupSize: args[5],
-                instanceId: args[6],
-            }
-        }
-
-        if (event == EVENTS.ENCOUNTER_END) {
-            assertArgLen(args, 8)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                encounterId: args[2],
-                encounterName: args[3],
-                difficultyId: args[4],
-                groupSize: args[5],
-                success: args[6],
-                fightTimeMs: args[7],
-            }
-        }
-
-        if (event == EVENTS.MAP_CHANGE) {
-            assertArgLen(args, 8)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                uiMapId: args[2],
-                uiMapName: args[3],
-                x0: args[4],
-                x1: args[5],
-                y0: args[6],
-                y1: args[7],
-            }
-        }
-
-        if (event == EVENTS.ZONE_CHANGE) {
-            assertArgLen(args, 5)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                instanceId: args[2],
-                zoneName: args[3],
-                difficultyId: args[4],
-            }
-        }
-
-        if (event == EVENTS.COMBAT_LOG_VERSION) {
-            assertArgLen(args, 9)
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: "COMBAT_LOG_VERSION",
-                combatLogVersionKey: args[1],
-                combatLogVersionValue: args[2],
-                advancedCombatLogEnabledKey: args[3],
-                advancedCombatLogEnabledValue: args[4],
-                buildVersionKey: args[5],
-                buildVersionValue: args[6],
-                projectIdKey: args[7],
-                projectIdValue: args[8],
-            }
-        }
-
-        if (event == EVENTS.EMOTE) {
-
-            // TODO: You can get commas inline in the text without an escape
-            // sequence around it:
-            //
-            // 8/18
-            // 19:35:55.758,EMOTE,Creature-0-3893-2481-14644-183533-00007E7769,"Genesis
-            // Relic",0000000000000000,nil,|TInterface\\ICONS\\Spell_Broker_GroundState.BLP:20|t
-            // The Relic comes to life as Xy'mox channels into it,
-            // emanating Genesis Rings!
-
-            // assertArgLen(args, 7)
-
-            // return {
-            //     date: args[0],
-            //     timestamp: `${lineArgs.encounterTimeMs}`,
-            //     event: args[1],
-            //     sourceGuid: args[2],
-            //     sourceName: args[3],
-            //     destGuid: args[4],
-            //     destName: args[5],
-            //     text: args[6],
-            // }
-
-            return {
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1]
-            }
-        }
-
-
-        if (anyOf(event, EVENTS.UNIT_DIED, EVENTS.UNIT_DESTROYED, EVENTS.PARTY_KILL)) {
-            assertArgLen(args, 11)
-
-            return {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-
-                // Unclear exactly what this arg is, there's something
-                // about "unconsciousOnDeath"
-                recapId: args[10]
-            }
-        }
-
-        // This is an ugly hack, all these events behave as if they
-        // were prefixed with SPELL_, so we'll just do that manually
-        // for now. In the future we need to modularize the extractors
-        // so we can map freely. 
-        if ([
-            EVENTS.DAMAGE_SPLIT, EVENTS.DAMAGE_SHIELD, EVENTS.DAMAGE_SHIELD_MISSED
-        ].includes(event)) {
-
-            if (EVENTS.DAMAGE_SPLIT == event) {
-                event = CUSTOM_EVENTS.C_DAMAGE_SPLIT
-            }
-            if (EVENTS.DAMAGE_SHIELD == event) {
-                event = CUSTOM_EVENTS.C_DAMAGE_SHIELD
-            }
-            if (EVENTS.DAMAGE_SHIELD_MISSED == event) {
-                event = CUSTOM_EVENTS.C_DAMAGE_SHIELD_MISSED
-            }
-
-        }
-
-        if (event == EVENTS.ENVIRONMENTAL_DAMAGE) {
-            assertArgLen(args, 38)
-
-            return {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-
-                // Advanced
-                infoGuid: args[10],
-                ownerGuid: args[11],
-                currentHp: args[12],
-                maxHp: args[13],
-                attackPower: args[14],
-                spellPower: args[15],
-                armor: args[16],
-                absorb: args[17],
-                powerType: args[18],
-                currentPower: args[19],
-                maxPower: args[20],
-                powerCost: args[21],
-                positionX: args[22],
-                positionY: args[23],
-                uiMapId: args[24],
-                facing: args[25],
-                item_level: args[26],
-
-                // Suffix
-                environmentalType: args[27],
-                amount: args[28],
-                baseAmount: args[29],
-                overkill: args[30],
-                school: args[31],
-                unknown_1: assertAlwaysNilOrZero(args, 32),
-                blocked: args[33],
-                absorbed: args[34],
-                critical: args[35], // nil or 1
-                unknown_3: assertAlwaysNilOrZero(args, 36),
-                unknown_4: assertAlwaysNilOrZero(args, 37),
-
-            }
-        }
-
-        if (event.startsWith("SWING_")) {
-            data = {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-            }
-
-            if (anyOf(event, EVENTS.SWING_DAMAGE, EVENTS.SWING_DAMAGE_LANDED)) {
-                assertArgLen(args, 37)
-
                 return {
-                    ...data,
-
-                    // Advanced
-                    infoGuid: args[10],
-                    ownerGuid: args[11],
-                    currentHp: args[12],
-                    maxHp: args[13],
-                    attackPower: args[14],
-                    spellPower: args[15],
-                    armor: args[16],
-                    absorb: args[17],
-                    powerType: args[18],
-                    currentPower: args[19],
-                    maxPower: args[20],
-                    powerCost: args[21],
-                    positionX: args[22],
-                    positionY: args[23],
-                    uiMapId: args[24],
-                    facing: args[25],
-                    item_level: args[26],
-
-                    // Suffix
-                    amount: args[27],
-                    baseAmount: args[28],
-                    overkill: args[29],
-                    school: args[30],
-                    unknown_1: assertAlwaysNilOrZero(args, 31),
-                    blocked: args[32],
-                    absorbed: args[33],
-                    critical: args[34], // nil or 1
-                    unknown_3: assertAlwaysNilOrZero(args, 35),
-                    unknown_4: assertAlwaysNilOrZero(args, 36),
-                }
-            }
-
-            if (event == EVENTS.SWING_MISSED) {
-                assertArgLen(args, 12, 13, 15)
-
-                if (args.length == 12) {
-                    return {
-                        ...data,
-
-                        missType: args[10],
-                        isOffHand: args[11],
-                    }
-                }
-
-                if (args.length == 13) {
-                    return {
-                        ...data,
-
-                        missType: args[10],
-                        isOffHand: args[11],
-                        amountMissed: args[12],
-                    }
-                }
-
-                if (args.length == 15) {
-                    return {
-                        ...data,
-
-                        missType: args[10],
-                        isOffHand: args[11],
-                        amountMissed: args[12],
-                        baseAmount: args[13],
-                        critical: args[14],
-                    }
-                }
-
-            }
-
-        }
-
-        // Special SPELL_ type, cannot be parsed with the rest of the
-        // SPELL_ events, it will be missing the spell info if the
-        // absorbed attack wasn't a spell.
-        if (event == EVENTS.SPELL_ABSORBED) {
-            assertArgLen(args, 20, 23)
-
-            // This relatively new subevent fires in addition to
-            // SWING_MISSED / SPELL_MISSED which already have the
-            // "ABSORB" missType and same amount.
-            //
-            // It optionally includes the spell payload if triggered
-            // from what would be SPELL_DAMAGE.
-
-            const base = {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-            }
-
-            if (args.length == 20) {
-                return {
-                    ...base,
-
-                    // Suffix
-                    casterGuid: args[10],
-                    casterName: args[11],
-                    casterFlags: args[12],
-                    casterRaidFlags: args[13],
-                    absorbSpellId: args[14],
-                    absorbSpellName: args[15],
-                    absorbSpellSchool: args[16],
-                    absorbAmount: args[17],
-                    damageAmount: args[18],
-                    critical: args[19], // This refers to the damaging attack that was absorbed 
-                }
-            }
-
-            if (args.length == 23) {
-                return {
-                    ...base,
-
-                    // Extra spell data
-                    spellId: args[10],
-                    spellName: args[11],
-                    spellSchool: args[12],
-
-                    // Suffix
-                    casterGuid: args[13],
-                    casterName: args[14],
-                    casterFlags: args[15],
-                    casterRaidFlags: args[16],
-                    absorbSpellId: args[17],
-                    absorbSpellName: args[18],
-                    absorbSpellSchool: args[19],
-                    absorbAmount: args[20],
-                    damageAmount: args[21],
-                    critical: args[22], // This refers to the damaging attack that was absorbed 
-                }
-            }
-
-        }
-
-        if ((
-            event.startsWith("SPELL_") || event.startsWith("RANGE_")
-        ) && event != EVENTS.SPELL_ABSORBED) {
-
-            data = {
-                // Base
-                date: args[0],
-                timestamp: `${lineArgs.encounterTimeMs}`,
-                event: args[1],
-                sourceGuid: args[2],
-                sourceName: args[3],
-                sourceFlags: args[4],
-                sourceRaidFlags: args[5],
-                destGuid: args[6],
-                destName: args[7],
-                destFlags: args[8],
-                destRaidFlags: args[9],
-
-                // SPELL_
-                spellId: args[10],
-                spellName: args[11],
-                spellSchool: args[12],
-            }
-
-            if (anyOf(event, EVENTS.SPELL_DRAIN, EVENTS.SPELL_LEECH)) {
-                assertArgLen(args, 34, 35)
-
-                if (args.length == 34) {
-                    return {
-                        ...data,
-
-                        // Advanced
-                        infoGuid: args[13],
-                        ownerGuid: args[14],
-                        currentHp: args[15],
-                        maxHp: args[16],
-                        attackPower: args[17],
-                        spellPower: args[18],
-                        armor: args[19],
-                        absorb: args[20],
-                        powerType: args[21],
-                        currentPower: args[22],
-                        maxPower: args[23],
-                        powerCost: args[24],
-                        positionX: args[25],
-                        positionY: args[26],
-                        uiMapId: args[27],
-                        facing: args[28],
-                        item_level: args[29],
-
-                        // Suffix
-                        amount: args[30],
-                        extraPowerType: args[31],
-                        extraAmount: args[32],
-                    }
-                }
-
-                if (args.length == 35) {
-                    return {
-                        ...data,
-
-                        // Advanced
-                        infoGuid: args[13],
-                        ownerGuid: args[14],
-                        currentHp: args[15],
-                        maxHp: args[16],
-                        attackPower: args[17],
-                        spellPower: args[18],
-                        armor: args[19],
-                        absorb: args[20],
-                        powerType: args[21],
-                        currentPower: args[22],
-                        maxPower: args[23],
-                        powerCost: args[24],
-                        positionX: args[25],
-                        positionY: args[26],
-                        uiMapId: args[27],
-                        facing: args[28],
-                        item_level: args[29],
-
-                        // Suffix
-                        amount: args[30],
-                        extraPowerType: args[31],
-                        extraAmount: args[32],
-                        extraMaxPower: args[33],
-                    }
-                }
-
-            }
-
-            if (event == EVENTS.SPELL_INTERRUPT) {
-                assertArgLen(args, 16)
-
-                return {
-                    ...data,
-
-                    // Suffix
-                    extraSpellId: args[13],
-                    extraSpellName: args[14],
-                    extraSchool: args[15],
-                }
-            }
-
-            if (event == EVENTS.SPELL_AURA_BROKEN) {
-                assertArgLen(args, 14)
-
-                return {
-                    ...data,
-
-                    // Suffix
-                    auraType: args[13],
-                }
-            }
-
-            if (anyOf(event, EVENTS.SPELL_DISPEL, EVENTS.SPELL_AURA_BROKEN_SPELL, EVENTS.SPELL_STOLEN)) {
-                assertArgLen(args, 17)
-
-                return {
-                    ...data,
-
-                    // Suffix
-                    extraSpellId: args[13],
-                    extraSpellName: args[14],
-                    extraSchool: args[15],
-                    auraType: args[16],
-                }
-            }
-
-            if (anyOf(event, EVENTS.SPELL_RESURRECT, EVENTS.SPELL_CREATE)) {
-                assertArgLen(args, 13)
-                return data
-            }
-
-            if (event == EVENTS.SPELL_INSTAKILL) {
-                assertArgLen(args, 14)
-
-                return {
-                    ...data,
-
-                    // Unclear exactly what this arg is, there's something
-                    // about "unconsciousOnDeath"
-                    recapId: args[13]
-                }
-            }
-
-            if (event == EVENTS.SPELL_EXTRA_ATTACKS) {
-                assertArgLen(args, 14)
-
-                return {
-                    ...data,
-
-                    amount: args[13]
-                }
-            }
-
-            if (anyOf(event,
-                EVENTS.SPELL_MISSED,
-                EVENTS.RANGE_MISSED,
-                EVENTS.SPELL_PERIODIC_MISSED,
-                CUSTOM_EVENTS.C_DAMAGE_SHIELD_MISSED)
-            ) {
-                assertArgLen(args, 15, 16, 18)
-
-                if (args.length == 15) {
-                    return {
-                        ...data,
-
-                        missType: args[13],
-                        isOffHand: args[14],
-                    }
-                }
-
-                if (args.length == 16) {
-                    return {
-                        ...data,
-
-                        missType: args[13],
-                        isOffHand: args[14],
-                        amountMissed: args[15]
-                    }
-                }
-
-                if (args.length == 18) {
-                    return {
-                        ...data,
-
-                        missType: args[13],
-                        isOffHand: args[14],
-                        amountMissed: args[15],
-                        baseAmount: args[16],
-                        critical: args[17],
-                    }
-                }
-            }
-
-            if (anyOf(event, EVENTS.SPELL_ENERGIZE, EVENTS.SPELL_PERIODIC_ENERGIZE)) {
-                assertArgLen(args, 34)
-
-                return {
-                    ...data,
-
-                    // Advanced
-                    infoGuid: args[13],
-                    ownerGuid: args[14],
-                    currentHp: args[15],
-                    maxHp: args[16],
-                    attackPower: args[17],
-                    spellPower: args[18],
-                    armor: args[19],
-                    absorb: args[20],
-                    powerType: args[21],
-                    currentPower: args[22],
-                    maxPower: args[23],
-                    powerCost: args[24],
-                    positionX: args[25],
-                    positionY: args[26],
-                    uiMapId: args[27],
-                    facing: args[28],
-                    item_level: args[29],
-
-                    // Suffix
-                    amount: args[30],
-                    overEnergize: args[31],
-                    _powerType: args[32],
-                    _maxPower: args[33]
-                }
-            }
-
-            if ([EVENTS.SPELL_HEAL, EVENTS.SPELL_PERIODIC_HEAL].includes(event)) {
-                assertArgLen(args, 35)
-
-                return {
-                    ...data,
-
-                    // Advanced
-                    infoGuid: args[13],
-                    ownerGuid: args[14],
-                    currentHp: args[15],
-                    maxHp: args[16],
-                    attackPower: args[17],
-                    spellPower: args[18],
-                    armor: args[19],
-                    absorb: args[20],
-                    powerType: args[21],
-                    currentPower: args[22],
-                    maxPower: args[23],
-                    powerCost: args[24],
-                    positionX: args[25],
-                    positionY: args[26],
-                    uiMapId: args[27],
-                    facing: args[28],
-                    item_level: args[29],
-
-                    // Suffix
-                    amount: args[30],
-                    baseAmount: args[31],
-                    overheal: args[32], // 0 or amount
-                    absorbed: args[33], // 0 or amount
-                    critical: args[34], // nil or 1
-                }
-            }
-
-            if (event == EVENTS.SPELL_HEAL_ABSORBED) {
-                assertArgLen(args, 22)
-
-                return {
-                    ...data,
-
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_HEAL_ABSORBED",
                     caserGuid: args[13],
                     casterName: args[14],
-                    casterFlags: args[15],
-                    casterRaidFlags: args[16],
-                    absorbSpellId: args[17],
+                    casterFlags: Number(args[15]),
+                    casterRaidFlags: Number(args[16]),
+                    absorbSpellId: Number(args[17]),
                     absorbSpellName: args[18],
-                    absorbSpellSchool: args[19],
-                    amount: args[20],
-                    baseAmount: args[21],
-                }
-            }
-
-            if (event == EVENTS.SPELL_CAST_SUCCESS) {
-                assertArgLen(args, 30)
-
+                    absorbSpellSchool: Number(args[19]),
+                    amount: Number(args[20]),
+                    baseAmount: Number(args[21]),
+                };
+            case EVENTS.SPELL_HEAL:
+                // Handle SPELL_HEAL event
                 return {
-                    ...data,
-
-                    // Advanced
-                    infoGuid: args[13],
-                    ownerGuid: args[14],
-                    currentHp: args[15],
-                    maxHp: args[16],
-                    attackPower: args[17],
-                    spellPower: args[18],
-                    armor: args[19],
-                    absorb: args[20],
-                    powerType: args[21],
-                    currentPower: args[22],
-                    maxPower: args[23],
-                    powerCost: args[24],
-                    positionX: args[25],
-                    positionY: args[26],
-                    uiMapId: args[27],
-                    facing: args[28],
-                    item_level: args[29],
-                }
-            }
-
-            // This seems to only trigger for the player recording the log
-            if (event == EVENTS.SPELL_CAST_FAILED) {
-                assertArgLen(args, 14)
-
+                    ...advancedUnitEvent!,
+                    ...spellPrefixEvent!,
+                    ...HealSuffixEvent!,
+                    event: "SPELL_HEAL",
+                };
+            case EVENTS.SPELL_INSTAKILL:
+                // Handle SPELL_INSTAKILL event
                 return {
-                    ...data,
-
-                    // Suffix
-                    failedType: args[13]
-                }
-            }
-
-            if (event == EVENTS.SPELL_EMPOWER_END) {
-                assertArgLen(args, 14)
-
+                    ...baseDeathEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_INSTAKILL"
+                };
+            case EVENTS.SPELL_INTERRUPT:
+                // Handle SPELL_INTERRUPT event
                 return {
-                    ...data,
-
-                    // Suffix
-                    numChargesSpent: args[13] //Maybe? Idk tbh, just guessing at this point
-                }
-            }
-
-            if (event == EVENTS.SPELL_EMPOWER_INTERRUPT) {
-                assertArgLen(args, 14)
-
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_INTERRUPT",
+                    extraSpellId: Number(args[13]),
+                    extraSpellName: args[14],
+                    extraSchool: Number(args[15]),
+                };
+            case EVENTS.SPELL_MISSED:
+                // Handle SPELL_MISSED event
                 return {
-                    ...data,
-
-                    // Suffix
-                    failedType: args[13] //Maybe? Idk tbh, just guessing at this point
-                }
-            }
-
-            if ([EVENTS.SPELL_CAST_START, EVENTS.SPELL_SUMMON, EVENTS.SPELL_EMPOWER_START].includes(event)) {
-                assertArgLen(args, 13)
-                return data
-            }
-
-            if ([
-                EVENTS.SPELL_DAMAGE, EVENTS.SPELL_PERIODIC_DAMAGE, EVENTS.RANGE_DAMAGE,
-                CUSTOM_EVENTS.C_DAMAGE_SPLIT, CUSTOM_EVENTS.C_DAMAGE_SHIELD
-            ].includes(event)) {
-                assertArgLen(args, 40)
-
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    ...missedEvent!,
+                    event: "SPELL_MISSED",
+                };
+            case EVENTS.SPELL_PERIODIC_DAMAGE:
+                // Handle SPELL_PERIODIC_DAMAGE event
                 return {
-                    ...data,
-
-                    // Advanced
-                    infoGuid: args[13],
-                    ownerGuid: args[14],
-                    currentHp: args[15],
-                    maxHp: args[16],
-                    attackPower: args[17],
-                    spellPower: args[18],
-                    armor: args[19],
-                    absorb: args[20],
-                    powerType: args[21],
-                    currentPower: args[22],
-                    maxPower: args[23],
-                    powerCost: args[24],
-                    positionX: args[25],
-                    positionY: args[26],
-                    uiMapId: args[27],
-                    facing: args[28],
-                    item_level: args[29],
-
-                    // Suffix
-                    amount: args[30],
-                    baseAmount: args[31],
-                    overkill: args[32], // -1 or the overkill value
-                    school: args[33],
-                    unknown_1: assertAlwaysNilOrZero(args, 34),
-                    blocked: args[35],
-                    absorbed: args[36], // 0 or above
-                    critical: args[37], // nil or 1
-                    unknown_3: assertAlwaysNilOrZero(args, 38),
-                    unknown_4: assertAlwaysNilOrZero(args, 39),
-                }
-            }
-
-            if ([EVENTS.SPELL_AURA_APPLIED, EVENTS.SPELL_AURA_REMOVED, EVENTS.SPELL_AURA_APPLIED_DOSE,
-            EVENTS.SPELL_AURA_REMOVED_DOSE, EVENTS.SPELL_AURA_REFRESH].includes(event)) {
-                assertArgLen(args, 14, 15, 16)
-
-                if (args.length == 14) {
-                    return {
-                        ...data,
-
-                        auraType: args[13],
-                    }
-                }
-
-                if (args.length == 15) {
-                    return {
-                        ...data,
-
-                        auraType: args[13],
-                        amount: args[14]
-                    }
-                }
-
-                if (args.length == 16) {
-                    return {
-                        ...data,
-
-                        auraType: args[13],
-                        amount: args[14],
-
-                        // I'm unsure exactly what this 16th param is.
-                        // It showed up during S4 fated, on the
-                        // double-absorb orb (one enemy one friendly).
-                        /*
-
-                        // This is the one we DPS
-                        args: [
-                            'Creature-0-3111-2296-14971-188703-00006AB622',
-                            '"Protoform Barrier"',
-                            '0xa48',
-                            '0x0',
-                            'Creature-0-3111-2296-14971-188703-00006AB622',
-                            '"Protoform Barrier"',
-                            '0xa48',
-                            '0x0',
-                            '371597',
-                            '"Protoform Barrier"',
-                            '0x6a',
-                            'BUFF',
-                            '1901334',
-                            '0' // Zero, absorb amount is the prev arg
-                        ]
-
-                        // I assume this is the one we heal?
-                        args: [
-                            'Creature-0-3111-2296-14971-188703-00006AB622',
-                            '"Protoform Barrier"',
-                            '0xa48',
-                            '0x0',
-                            'Creature-0-3111-2296-14971-189773-00006AB622',
-                            '"Protoform Barrier"',
-                            '0xa18',
-                            '0x0',
-                            '371597',
-                            '"Protoform Barrier"',
-                            '0x6a',
-                            'BUFF',
-                            '0',
-                            '1901334' // Non-zero, I'm assuming this is a "heal" absorb
-                        ]
-
-                        */
-                        _healAbsorb: args[15]
-                    }
-                }
-            }
-
+                    ...advancedUnitEvent!,
+                    ...damageSuffixEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_PERIODIC_DAMAGE",
+                };
+            case EVENTS.SPELL_PERIODIC_ENERGIZE:
+                // Handle SPELL_PERIODIC_ENERGIZE event
+                return {
+                    ...advancedUnitEvent!,
+                    ...EnergizeSuffixEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_PERIODIC_ENERGIZE",
+                };
+            case EVENTS.SPELL_PERIODIC_HEAL:
+                // Handle SPELL_PERIODIC_HEAL event
+                return {
+                    ...advancedUnitEvent!,
+                    ...spellPrefixEvent!,
+                    ...HealSuffixEvent!,
+                    event: "SPELL_PERIODIC_HEAL",
+                };
+            case EVENTS.SPELL_PERIODIC_MISSED:
+                // Handle SPELL_PERIODIC_MISSED event
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    ...missedEvent!,
+                    event: "SPELL_PERIODIC_MISSED",
+                };
+            case EVENTS.SPELL_RESURRECT:
+                // Handle SPELL_RESURRECT event
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_RESURRECT",
+                };
+            case EVENTS.SPELL_SUMMON:
+                // Handle SPELL_SUMMON event
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_SUMMON",
+                };
+            case EVENTS.SPELL_STOLEN:
+                // Handle SPELL_STOLEN event
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_STOLEN",
+                    extraSpellId: Number(args[13]),
+                    extraSpellName: args[14],
+                    extraSchool: Number(args[15]),
+                    auraType: args[16],
+                };
+            case EVENTS.SWING_DAMAGE_LANDED:
+                // Handle SWING_DAMAGE_LANDED event
+                return {
+                    ...advancedUnitEvent!,
+                    ...damageSuffixEvent!,
+                    event: "SWING_DAMAGE_LANDED"
+                };
+            case EVENTS.SWING_DAMAGE:
+                // Handle SWING_DAMAGE event
+                return {
+                    ...advancedUnitEvent!,
+                    ...damageSuffixEvent!,
+                    event: "SWING_DAMAGE"
+                };
+            case EVENTS.SWING_MISSED:
+                // Handle SWING_MISSED event
+                return {
+                    ...baseUnitEvent!,
+                    ...missedEvent!,
+                    event: "SWING_MISSED"
+                };
+            case EVENTS.UNIT_DESTROYED:
+                // Handle UNIT_DESTROYED event
+                return {
+                    ...baseDeathEvent!,
+                    event: "UNIT_DESTROYED"
+                };
+            case EVENTS.UNIT_DIED:
+                // Handle UNIT_DIED event
+                return {
+                    ...baseDeathEvent!,
+                    event: "UNIT_DIED"
+                };
+            case EVENTS.WORLD_MARKER_PLACED:
+                // Handle WORLD_MARKER_PLACED event
+                return {
+                    ...baseEvent,
+                    event: "WORLD_MARKER_PLACED",
+                    instanceId: Number(args[2]),
+                    marker: Number(args[3]),
+                    x: Number(args[4]),
+                    y: Number(args[5]),
+                };
+            case EVENTS.WORLD_MARKER_REMOVED:
+                // Handle WORLD_MARKER_REMOVED event
+                return {
+                    ...baseEvent,
+                    event: "WORLD_MARKER_REMOVED",
+                    marker: Number(args[2]),
+                };
+            case EVENTS.ZONE_CHANGE:
+                // Handle ZONE_CHANGE event
+                return {
+                    ...baseEvent!,
+                    event: "ZONE_CHANGE",
+                    instanceId: Number(args[2]),
+                    zoneName: args[3],
+                    difficultyId: Number(args[4]),
+                };
+            case EVENTS.SPELL_EMPOWER_START:
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_EMPOWER_START",
+                };
+            case EVENTS.SPELL_EMPOWER_END:
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_EMPOWER_END",
+                    chargesSpent: Number(args[13]),
+                };
+            case EVENTS.SPELL_EMPOWER_INTERRUPT:
+                return {
+                    ...baseUnitEvent!,
+                    ...spellPrefixEvent!,
+                    event: "SPELL_EMPOWER_INTERRUPT",
+                    failedType: args[13],
+                };
+            default:
+                throw Error(`Unhandled event, ${args}`);
+            
         }
-
-        throw Error(`Unhandled event, ${args}`)
+        
     }
 
 }
