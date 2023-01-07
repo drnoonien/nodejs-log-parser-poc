@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { EventMapper} from './event-mapper'
+import { ENCOUNTER_START, EventMapper, MAPPED_EVENT, WORLD_MARKER_PLACED } from './event-mapper'
 import { LogParser } from './log-parser'
 
 const file = process.argv[2]
@@ -11,30 +11,30 @@ async function main() {
     // const filePath = path.resolve(__dirname, `../logs/cn_chill_ev.txt`)
 
     const eventMapper = new EventMapper()
-    const logParser = new LogParser<EventLine>({
+    const logParser = new LogParser<MAPPED_EVENT>({
         mapper: (line) => {
             return eventMapper.map(line)
         }
     })
-    const out: EventLine[] = []
+    const out: MAPPED_EVENT[] = []
     let collect = false
-    let worldMarkers: EventLine[] = []
-    let map : EventLine
+    let worldMarkers: WORLD_MARKER_PLACED[] = []
+    let map: MAPPED_EVENT
 
     logParser.streamSync(filePath, (eventLine, _reader) => {
 
-        if (eventLine.event === EVENTS.MAP_CHANGE) {
+        if (eventLine.event === 'MAP_CHANGE') {
             map = eventLine
         }
 
-        if (eventLine.event === EVENTS.WORLD_MARKER_PLACED) {
+        if (eventLine.event === 'WORLD_MARKER_PLACED') {
             worldMarkers.push(eventLine)
         }
-        if (eventLine.event === EVENTS.WORLD_MARKER_REMOVED) {
+        if (eventLine.event === 'WORLD_MARKER_REMOVED') {
             worldMarkers = worldMarkers.filter(marker => marker.marker != eventLine.marker)
         }
 
-        if (eventLine.event === EVENTS.ENCOUNTER_START) {
+        if (eventLine.event === 'ENCOUNTER_START') {
             console.log('Found encounter', eventLine)
             const fileName = getFileName(eventLine)
 
@@ -54,8 +54,12 @@ async function main() {
             return
         }
 
-        if (collect && eventLine.event === EVENTS.ENCOUNTER_END) {
+        if (collect && eventLine.event === 'ENCOUNTER_END') {
             out.push(eventLine)
+
+            if (out[0].event !== "ENCOUNTER_START") {
+                throw Error(`Expected first item to be encounter start, it was not, something is borked, actual first event: ${JSON.stringify(out[0])}`)
+            }
 
             const fileName = getFileName(out[0])
             console.log('Writing encounter to file', fileName)
@@ -100,7 +104,7 @@ function getOutPath(fileName: string) {
     return fullOutPath
 }
 
-function getFileName(eventLine: EventLine) {
+function getFileName(eventLine: ENCOUNTER_START) {
     const name = eventLine.encounterName.replace(/\"/g, "")
     const time = eventLine.date.split(" ")[1].replace(/:/g, '_')
 
