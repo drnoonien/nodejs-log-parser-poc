@@ -8,6 +8,408 @@ const CUSTOM_EVENTS = {
     C_DAMAGE_SHIELD_MISSED: "SPELL_DAMAGE_SHIELD_MISSED_C",
 }
 
+enum PowerType {
+    HealthCost = -2,
+    None = -1,
+    Mana = 0,
+    Rage = 1,
+    Focus = 2,
+    Energy = 3,
+    ComboPoints = 4,
+    Runes = 5,
+    RunicPower = 6,
+    SoulShards = 7,
+    LunarPower = 8,
+    HolyPower = 9,
+    Alternate = 10, // Boss specific stuff, think cho'gall corruption level
+    Maelstrom = 11,
+    Chi = 12,
+    Insanity = 13,
+    Obsolete = 14, //Warlock remnant
+    Obsolete2 = 15, //Warlock remnant
+    ArcaneCharges = 16,
+    Fury = 17,
+    Pain = 18,
+    Essence = 19,
+    RuneBlood = 20,
+    RuneFrost = 21,
+    RuneUnholy = 22,
+    NumPowerTypes = 23
+}
+/*
+TODO:
+enum SchoolType {
+    Physical = 1,
+    Holy = 2,
+    Holystrike = 3,
+    Fire = 4,
+    Flamestrike = 5,
+
+}
+*/
+
+type Event = CombatLogVersion | CombatantInfo | DamageSplit
+    | DamageShield | DamageShieldMissed| Emote 
+    | EncounterEnd | EncounterStart | EnvironmentalDamage
+    | EnchantApplied | EnchantRemoved | MapChange | PartyKill
+    | RangeDamage | RangeMissed | SpellAbsorbed
+    | SpellAuraAppliedDose | SpellAuraApplied | SpellAuraBrokenSpell
+    | SpellAuraBroken | SpellAuraRefresh | SpellAuraRemovedDose
+    | SpellAuraRemoved | SpellCreate | SpellCastFailed | SpellCastStart
+    | SpellCastSuccess | SpellDamage | SpellDrain | SpellLeech
+    | SpellDispel | SpellEnergize | SpellExtraAttacks | SpellHealAbsorbed
+    | SpellHeal | SpellInstakill | SpellInterrupt | SpellMissed
+    | SpellPeriodicDamage | SpellPeriodicEnergize | SpellPeriodicHeal
+    | SpellPeriodicMissed | SpellResurrect | SpellSummon | SpellStolen
+    | SwingDamageLanded | SwingDamage | SwingMissed | UnitDestroyed 
+    | UnitDied | WorldMarkerPlaced | WorldMarkerRemoved | ZoneChange
+    | SpellEmpowerStart | SpellEmpowerEnd | SpellEmpowerInterrupt
+
+type baseEvent = {
+    date: string
+    timestamp: string
+}
+
+type baseUnitEvent = baseEvent & {
+    sourceGuid: string
+    sourceName: string
+    sourceFlags: number
+    sourceRaidFlags: number
+    destGuid: string
+    destName: string
+    destFlags: number
+    destRaidFlags: number
+}
+
+type missedEvent = {
+    missType: string
+    isOffHand?: number
+    amountMissed?: number
+    baseAmount?: number
+    critical?: number
+}
+
+type advancedUnitEvent = baseUnitEvent & {
+    infoGuid: string
+    ownerGuid: string
+    currentHp: number
+    maxHp: number
+    attackPower: number
+    spellPower: number
+    armor: number
+    absorb: number
+    powerType: PowerType
+    currentPower: number
+    maxPower: number
+    powerCost: number
+    positionX: number
+    positionY: number
+    uiMapId: number
+    facing: number
+    item_level: number //TODO: This is still documented as "item level" for players, but level for NPCs
+}
+
+type damageSuffixEvent = {
+    amount: number
+    baseAmount: number
+    overkill: number
+    school: number
+    resisted?: number
+    blocked?: number
+    absorbed?: number
+    critical?: number
+    glancing?: number
+    crushing?: number
+}
+
+type SpellPrefixEvent =  {
+    spellId: number
+    spellName: string
+    spellSchool: number
+}
+
+type EnergizeSuffixEvent =  {
+    amount: number
+    overEnergize: number
+    powerType: PowerType
+    maxPower: number
+}
+type HealSuffixEvent =  {
+    amount: number
+    baseAmount: number
+    overheal: number
+    absorbed: number
+    critical?: number
+}
+
+type baseDeathEvent = baseUnitEvent & {
+    recapID?: number //guessing type tbh, also maybe not present it seems?
+    unconsciousOnDeath: number //Guessing it's a bool expressed a 0 or 1, real name is #unconsciousOnDeath
+};
+
+type CombatLogVersion = baseEvent & {
+    event: "COMBAT_LOG_VERSION"
+    combatLogVersionKey: string
+    combatLogVersionValue: number
+    advancedCombatLogEnabledKey: string
+    advancedCombatLogEnabledValue: number
+    buildVersionKey: string
+    buildVersionValue: number
+    projectIdKey: string
+    projectIdValue: number
+}
+
+// Cba fixing for now, it's filtered
+type CombatantInfo = baseEvent & {
+    event: "COMBATANT_INFO"
+};
+type DamageSplit = advancedUnitEvent & SpellPrefixEvent & damageSuffixEvent & {
+    event: "DAMAGE_SPLIT"
+};
+type DamageShield = advancedUnitEvent & SpellPrefixEvent & damageSuffixEvent & {
+    event: "DAMAGE_SHIELD"
+};
+type DamageShieldMissed = baseUnitEvent & SpellPrefixEvent & missedEvent & {
+    event: "DAMAGE_SHIELD_MISSED"
+};
+// Filtered
+type Emote = baseEvent & {
+    event: "EMOTE"
+};
+type EncounterEnd = baseEvent & {
+    event: "ENCOUNTER_END"
+    encounterId: number
+    encounterName: string
+    difficultyId: number
+    groupSize: number
+    success: number
+    fightTimeMs: number
+};
+type EncounterStart = baseEvent & {
+    event: "ENCOUNTER_START"
+    encounterId: number
+    encounterName: string
+    difficultyId: number
+    groupSize: number
+    instanceId: number
+};
+type EnvironmentalDamage = advancedUnitEvent & damageSuffixEvent & {
+    event: "ENVIRONMENTAL_DAMAGE"
+    environmentalType: string
+};
+type EnchantApplied = baseUnitEvent & {
+    event: "ENCHANT_APPLIED"
+    spellName: string
+    itemId: number
+    itemName: string
+};
+type EnchantRemoved = baseUnitEvent & {
+    event: "ENCHANT_REMOVED"
+    spellName: string
+    itemId: number
+    itemName: string
+};
+type MapChange = baseEvent & {
+    event: "MAP_CHANGE"
+    uiMapId: number
+    uiMapName: string
+    x0: number
+    x1: number
+    y0: number
+    y1: number
+};
+type PartyKill = baseDeathEvent & {
+    event: "PARTY_KILL"
+};
+type RangeDamage = advancedUnitEvent & SpellPrefixEvent & damageSuffixEvent & {
+    event: "RANGE_DAMAGE"
+};
+type RangeMissed = baseUnitEvent & SpellPrefixEvent & missedEvent & {
+    event: "RANGE_MISSED"
+};
+type SpellAbsorbed = baseUnitEvent & damageSuffixEvent & {
+    event: "SPELL_ABSORBED"
+    spellId?: number
+    spellName: string
+    spellSchool: number
+};
+type SpellAuraAppliedDose = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_AURA_APPLIED_DOSE"
+    auraType: string
+    amount?: number
+};
+type SpellAuraApplied = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_AURA_APPLIED"
+    auraType: string
+    amount?: number
+};
+type SpellAuraBrokenSpell = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_AURA_BROKEN_SPELL"
+    extraSpellId: number
+    extraSpellName: string
+    extraSchool: number
+    auraType: string
+};
+type SpellAuraBroken = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_AURA_BROKEN"
+    auraType: string
+};
+type SpellAuraRefresh = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_AURA_REFRESH"
+    auraType: string
+    amount?: number
+};
+type SpellAuraRemovedDose = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_AURA_REMOVED_DOSE"
+    auraType: string
+    amount?: number
+};
+type SpellAuraRemoved = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_AURA_REMOVED"
+    auraType: string
+    amount?: number
+};
+type SpellCreate = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_CREATE"
+};
+// Seems to be self-only, so filtered for now
+type SpellCastFailed = baseEvent & {
+    event: "SPELL_CAST_FAILED"
+};
+type SpellCastStart = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_CAST_START"
+};
+type SpellCastSuccess = advancedUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_CAST_SUCCESS"
+};
+type SpellDamage = advancedUnitEvent & SpellPrefixEvent & damageSuffixEvent & {
+    event: "SPELL_DAMAGE"
+};
+type SpellDrain =  advancedUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_DRAIN"
+    amount: number
+    extraPowerType: PowerType 
+    extraAmount: number 
+    extraMaxPower?: number //Assumption on wowpedia
+};
+type SpellLeech = advancedUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_LEECH"
+    amount: number
+    extraPowerType: PowerType 
+    extraAmount: number 
+};
+type SpellDispel = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_DISPEL"
+    extraSpellId: number
+    extraSpellName: string
+    extraSchool: number
+    auraType: string
+};
+type SpellEnergize = advancedUnitEvent & SpellPrefixEvent & EnergizeSuffixEvent & {
+    event: "SPELL_ENERGIZE"
+};
+type SpellExtraAttacks = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_EXTRA_ATTACKS"
+    amount: number
+};
+type SpellHealAbsorbed = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_HEAL_ABSORBED"
+    caserGuid: string
+    casterName: string
+    casterFlags: number
+    casterRaidFlags: number
+    absorbSpellId: number
+    absorbSpellName: string
+    absorbSpellSchool: number
+    amount: number
+    baseAmount: number
+};
+type SpellHeal = advancedUnitEvent & SpellPrefixEvent & HealSuffixEvent & {
+    event: "SPELL_HEAL"
+};
+type SpellInstakill = baseDeathEvent & SpellPrefixEvent & {
+    event: "SPELL_INSTAKILL"
+};
+type SpellInterrupt = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_INTERRUPT"
+    extraSpellId: number
+    extraSpellName: string
+    extraSchool: number
+};
+type SpellMissed = baseUnitEvent & SpellPrefixEvent & missedEvent & {
+    event: "SPELL_MISSED"
+};
+type SpellPeriodicDamage = advancedUnitEvent & SpellPrefixEvent & damageSuffixEvent & {
+    event: "SPELL_PERIODIC_DAMAGE"
+};
+type SpellPeriodicEnergize = advancedUnitEvent & SpellPrefixEvent & EnergizeSuffixEvent & {
+    event: "SPELL_PERIODIC_ENERGIZE"
+};
+type SpellPeriodicHeal = advancedUnitEvent & SpellPrefixEvent & HealSuffixEvent & {
+    event: "SPELL_PERIODIC_HEAL"
+};
+type SpellPeriodicMissed = baseUnitEvent & SpellPrefixEvent & missedEvent & {
+    event: "SPELL_PERIODIC_MISSED"
+};
+type SpellResurrect = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_RESURRECT"
+};
+type SpellSummon = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_SUMMON"
+};
+type SpellStolen = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_STOLEN"
+    extraSpellId: number
+    extraSpellName: string
+    extraSchool: number
+    auraType: string
+};
+type SwingDamageLanded = advancedUnitEvent & damageSuffixEvent & {
+    event: "SWING_DAMAGE_LANDED"
+};
+type SwingDamage = advancedUnitEvent & damageSuffixEvent & {
+    event: "SWING_DAMAGE"
+};
+type SwingMissed = baseUnitEvent & missedEvent & {
+    event: "SWING_MISSED"
+};
+type UnitDestroyed = baseDeathEvent & {
+    event: "UNIT_DESTROYED"
+};
+type UnitDied = baseDeathEvent & {
+    event: "UNIT_DIED"
+};
+type WorldMarkerPlaced = baseEvent & {
+    event: "WORLD_MARKER_PLACED"
+    instanceId: number
+    marker: number
+    x: number
+    y: number
+};
+type WorldMarkerRemoved = baseEvent & {
+    event: "WORLD_MARKER_REMOVED"
+    marker: number
+};
+type ZoneChange = baseEvent & {
+    event: "ZONE_CHANGE"
+    instanceId: number
+    zoneName: string
+    difficultyId: number
+};
+type SpellEmpowerStart = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_EMPOWER_START"
+};
+type SpellEmpowerEnd = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_EMPOWER_END"
+    chargesSpent: number //Still guessing here
+};
+type SpellEmpowerInterrupt = baseUnitEvent & SpellPrefixEvent & {
+    event: "SPELL_EMPOWER_INTERRUPT"
+    failedType: string //Still guessing here
+};
+
+
+
 export const EVENTS = {
     COMBAT_LOG_VERSION: "COMBAT_LOG_VERSION",
     COMBATANT_INFO: "COMBATANT_INFO",
