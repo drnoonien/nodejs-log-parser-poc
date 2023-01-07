@@ -133,62 +133,62 @@ export class EventMapper {
         // Can be cleaned up further with pre-defined mappings, but
         // this is just boilerplate.
 
-        if (event == "COMBAT_LOG_VERSION") { return COMBAT_LOG_VERSION(args, lineArgs.encounterTimeMs) }
-        if (event == "COMBATANT_INFO") { return COMBATANT_INFO(args, lineArgs.encounterTimeMs) }
-        if (event == "DAMAGE_SPLIT") { return DAMAGE_SPLIT(args, lineArgs.encounterTimeMs) }
-        if (event == "DAMAGE_SHIELD") { return DAMAGE_SHIELD(args, lineArgs.encounterTimeMs) }
-        if (event == "DAMAGE_SHIELD_MISSED") { return DAMAGE_SHIELD_MISSED(args, lineArgs.encounterTimeMs) }
-        if (event == "EMOTE") { return EMOTE(args, lineArgs.encounterTimeMs) }
-        if (event == "ENCOUNTER_END") { return ENCOUNTER_END(args, lineArgs.encounterTimeMs) }
-        if (event == "ENCOUNTER_START") { return ENCOUNTER_START(args, lineArgs.encounterTimeMs) }
-        if (event == "ENVIRONMENTAL_DAMAGE") { return ENVIRONMENTAL_DAMAGE(args, lineArgs.encounterTimeMs) }
-        if (event == "ENCHANT_APPLIED") { return ENCHANT_APPLIED(args, lineArgs.encounterTimeMs) }
-        if (event == "ENCHANT_REMOVED") { return ENCHANT_REMOVED(args, lineArgs.encounterTimeMs) }
-        if (event == "MAP_CHANGE") { return MAP_CHANGE(args, lineArgs.encounterTimeMs) }
-        if (event == "PARTY_KILL") { return PARTY_KILL(args, lineArgs.encounterTimeMs) }
-        if (event == "RANGE_DAMAGE") { return RANGE_DAMAGE(args, lineArgs.encounterTimeMs) }
-        if (event == "RANGE_MISSED") { return RANGE_MISSED(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_ABSORBED") { return SPELL_ABSORBED(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_AURA_APPLIED_DOSE") { return SPELL_AURA_APPLIED_DOSE(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_AURA_APPLIED") { return SPELL_AURA_APPLIED(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_AURA_BROKEN_SPELL") { return SPELL_AURA_BROKEN_SPELL(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_AURA_BROKEN") { return SPELL_AURA_BROKEN(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_AURA_REFRESH") { return SPELL_AURA_REFRESH(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_AURA_REMOVED_DOSE") { return SPELL_AURA_REMOVED_DOSE(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_AURA_REMOVED") { return SPELL_AURA_REMOVED(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_CREATE") { return SPELL_CREATE(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_CAST_FAILED") { return SPELL_CAST_FAILED(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_CAST_START") { return SPELL_CAST_START(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_CAST_SUCCESS") { return SPELL_CAST_SUCCESS(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_DAMAGE") { return SPELL_DAMAGE(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_DRAIN") { return SPELL_DRAIN(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_LEECH") { return SPELL_LEECH(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_DISPEL") { return SPELL_DISPEL(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_ENERGIZE") { return SPELL_ENERGIZE(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_EXTRA_ATTACKS") { return SPELL_EXTRA_ATTACKS(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_HEAL_ABSORBED") { return SPELL_HEAL_ABSORBED(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_HEAL") { return SPELL_HEAL(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_INSTAKILL") { return SPELL_INSTAKILL(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_INTERRUPT") { return SPELL_INTERRUPT(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_MISSED") { return SPELL_MISSED(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_PERIODIC_DAMAGE") { return SPELL_PERIODIC_DAMAGE(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_PERIODIC_ENERGIZE") { return SPELL_PERIODIC_ENERGIZE(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_PERIODIC_HEAL") { return SPELL_PERIODIC_HEAL(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_PERIODIC_MISSED") { return SPELL_PERIODIC_MISSED(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_RESURRECT") { return SPELL_RESURRECT(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_SUMMON") { return SPELL_SUMMON(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_STOLEN") { return SPELL_STOLEN(args, lineArgs.encounterTimeMs) }
-        if (event == "SWING_DAMAGE_LANDED") { return SWING_DAMAGE_LANDED(args, lineArgs.encounterTimeMs) }
-        if (event == "SWING_DAMAGE") { return SWING_DAMAGE(args, lineArgs.encounterTimeMs) }
-        if (event == "SWING_MISSED") { return SWING_MISSED(args, lineArgs.encounterTimeMs) }
-        if (event == "UNIT_DESTROYED") { return UNIT_DESTROYED(args, lineArgs.encounterTimeMs) }
-        if (event == "UNIT_DIED") { return UNIT_DIED(args, lineArgs.encounterTimeMs) }
-        if (event == "WORLD_MARKER_PLACED") { return WORLD_MARKER_PLACED(args, lineArgs.encounterTimeMs) }
-        if (event == "WORLD_MARKER_REMOVED") { return WORLD_MARKER_REMOVED(args, lineArgs.encounterTimeMs) }
-        if (event == "ZONE_CHANGE") { return ZONE_CHANGE(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_EMPOWER_START") { return SPELL_EMPOWER_START(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_EMPOWER_END") { return SPELL_EMPOWER_END(args, lineArgs.encounterTimeMs) }
-        if (event == "SPELL_EMPOWER_INTERRUPT") { return SPELL_EMPOWER_INTERRUPT(args, lineArgs.encounterTimeMs) }
+        if (event == "COMBAT_LOG_VERSION") { return COMBAT_LOG_VERSION(args, lineArgs) }
+        if (event == "COMBATANT_INFO") { return COMBATANT_INFO(args, lineArgs) }
+        if (event == "DAMAGE_SPLIT") { return DAMAGE_SPLIT(args, lineArgs) }
+        if (event == "DAMAGE_SHIELD") { return DAMAGE_SHIELD(args, lineArgs) }
+        if (event == "DAMAGE_SHIELD_MISSED") { return DAMAGE_SHIELD_MISSED(args, lineArgs) }
+        if (event == "EMOTE") { return EMOTE(args, lineArgs) }
+        if (event == "ENCOUNTER_END") { return ENCOUNTER_END(args, lineArgs) }
+        if (event == "ENCOUNTER_START") { return ENCOUNTER_START(args, lineArgs) }
+        if (event == "ENVIRONMENTAL_DAMAGE") { return ENVIRONMENTAL_DAMAGE(args, lineArgs) }
+        if (event == "ENCHANT_APPLIED") { return ENCHANT_APPLIED(args, lineArgs) }
+        if (event == "ENCHANT_REMOVED") { return ENCHANT_REMOVED(args, lineArgs) }
+        if (event == "MAP_CHANGE") { return MAP_CHANGE(args, lineArgs) }
+        if (event == "PARTY_KILL") { return PARTY_KILL(args, lineArgs) }
+        if (event == "RANGE_DAMAGE") { return RANGE_DAMAGE(args, lineArgs) }
+        if (event == "RANGE_MISSED") { return RANGE_MISSED(args, lineArgs) }
+        if (event == "SPELL_ABSORBED") { return SPELL_ABSORBED(args, lineArgs) }
+        if (event == "SPELL_AURA_APPLIED_DOSE") { return SPELL_AURA_APPLIED_DOSE(args, lineArgs) }
+        if (event == "SPELL_AURA_APPLIED") { return SPELL_AURA_APPLIED(args, lineArgs) }
+        if (event == "SPELL_AURA_BROKEN_SPELL") { return SPELL_AURA_BROKEN_SPELL(args, lineArgs) }
+        if (event == "SPELL_AURA_BROKEN") { return SPELL_AURA_BROKEN(args, lineArgs) }
+        if (event == "SPELL_AURA_REFRESH") { return SPELL_AURA_REFRESH(args, lineArgs) }
+        if (event == "SPELL_AURA_REMOVED_DOSE") { return SPELL_AURA_REMOVED_DOSE(args, lineArgs) }
+        if (event == "SPELL_AURA_REMOVED") { return SPELL_AURA_REMOVED(args, lineArgs) }
+        if (event == "SPELL_CREATE") { return SPELL_CREATE(args, lineArgs) }
+        if (event == "SPELL_CAST_FAILED") { return SPELL_CAST_FAILED(args, lineArgs) }
+        if (event == "SPELL_CAST_START") { return SPELL_CAST_START(args, lineArgs) }
+        if (event == "SPELL_CAST_SUCCESS") { return SPELL_CAST_SUCCESS(args, lineArgs) }
+        if (event == "SPELL_DAMAGE") { return SPELL_DAMAGE(args, lineArgs) }
+        if (event == "SPELL_DRAIN") { return SPELL_DRAIN(args, lineArgs) }
+        if (event == "SPELL_LEECH") { return SPELL_LEECH(args, lineArgs) }
+        if (event == "SPELL_DISPEL") { return SPELL_DISPEL(args, lineArgs) }
+        if (event == "SPELL_ENERGIZE") { return SPELL_ENERGIZE(args, lineArgs) }
+        if (event == "SPELL_EXTRA_ATTACKS") { return SPELL_EXTRA_ATTACKS(args, lineArgs) }
+        if (event == "SPELL_HEAL_ABSORBED") { return SPELL_HEAL_ABSORBED(args, lineArgs) }
+        if (event == "SPELL_HEAL") { return SPELL_HEAL(args, lineArgs) }
+        if (event == "SPELL_INSTAKILL") { return SPELL_INSTAKILL(args, lineArgs) }
+        if (event == "SPELL_INTERRUPT") { return SPELL_INTERRUPT(args, lineArgs) }
+        if (event == "SPELL_MISSED") { return SPELL_MISSED(args, lineArgs) }
+        if (event == "SPELL_PERIODIC_DAMAGE") { return SPELL_PERIODIC_DAMAGE(args, lineArgs) }
+        if (event == "SPELL_PERIODIC_ENERGIZE") { return SPELL_PERIODIC_ENERGIZE(args, lineArgs) }
+        if (event == "SPELL_PERIODIC_HEAL") { return SPELL_PERIODIC_HEAL(args, lineArgs) }
+        if (event == "SPELL_PERIODIC_MISSED") { return SPELL_PERIODIC_MISSED(args, lineArgs) }
+        if (event == "SPELL_RESURRECT") { return SPELL_RESURRECT(args, lineArgs) }
+        if (event == "SPELL_SUMMON") { return SPELL_SUMMON(args, lineArgs) }
+        if (event == "SPELL_STOLEN") { return SPELL_STOLEN(args, lineArgs) }
+        if (event == "SWING_DAMAGE_LANDED") { return SWING_DAMAGE_LANDED(args, lineArgs) }
+        if (event == "SWING_DAMAGE") { return SWING_DAMAGE(args, lineArgs) }
+        if (event == "SWING_MISSED") { return SWING_MISSED(args, lineArgs) }
+        if (event == "UNIT_DESTROYED") { return UNIT_DESTROYED(args, lineArgs) }
+        if (event == "UNIT_DIED") { return UNIT_DIED(args, lineArgs) }
+        if (event == "WORLD_MARKER_PLACED") { return WORLD_MARKER_PLACED(args, lineArgs) }
+        if (event == "WORLD_MARKER_REMOVED") { return WORLD_MARKER_REMOVED(args, lineArgs) }
+        if (event == "ZONE_CHANGE") { return ZONE_CHANGE(args, lineArgs) }
+        if (event == "SPELL_EMPOWER_START") { return SPELL_EMPOWER_START(args, lineArgs) }
+        if (event == "SPELL_EMPOWER_END") { return SPELL_EMPOWER_END(args, lineArgs) }
+        if (event == "SPELL_EMPOWER_INTERRUPT") { return SPELL_EMPOWER_INTERRUPT(args, lineArgs) }
 
         // TODO: Should this be allowed or do we blow up? When is this
         // allowed?
@@ -327,7 +327,7 @@ function ENCHANT_APPLIED(args: string[], extra: any) {
         event: "ENCHANT_APPLIED" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         //Extracting args 2-9
         ...unitProperties,
@@ -350,7 +350,7 @@ function ENCHANT_REMOVED(args: string[], extra: any) {
         event: "ENCHANT_REMOVED" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         //Extracting args 3-9
         ...unitProperties,
@@ -364,14 +364,14 @@ function ENCHANT_REMOVED(args: string[], extra: any) {
 
 function COMBAT_LOG_VERSION(args: string[], extra: any) {
     assertArgLen(args, 9)
-
+    console.log(extra)
     return {
         // This 'as const' is the magic keyword that makes
         // discrimination work later. 
         event: "COMBAT_LOG_VERSION" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
         combatLogVersionKey: args[1],
         combatLogVersionValue: args[2],
         advancedCombatLogEnabledKey: args[3],
@@ -391,7 +391,7 @@ function COMBATANT_INFO(args: string[], extra: any) {
         event: "COMBATANT_INFO" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         //TODO: add more shit here.
     }
@@ -412,7 +412,7 @@ function DAMAGE_SPLIT(args: string[], extra: any) {
         // discrimination work later. 
         event: "DAMAGE_SPLIT" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-39
         ...baseUnitProperties,
@@ -437,7 +437,7 @@ function DAMAGE_SHIELD(args: string[], extra: any) {
         // discrimination work later. 
         event: "DAMAGE_SHIELD" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-39
         ...baseUnitProperties,
@@ -461,7 +461,7 @@ function DAMAGE_SHIELD_MISSED(args: string[], extra: any) {
         // discrimination work later. 
         event: "DAMAGE_SHIELD_MISSED" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-17
         ...baseUnitProperties,
@@ -480,7 +480,7 @@ function EMOTE(args: string[], extra: any) {
         event: "EMOTE" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
     }
 }
 function ENCOUNTER_END(args: string[], extra: any) {
@@ -491,7 +491,7 @@ function ENCOUNTER_END(args: string[], extra: any) {
         // discrimination work later. 
         event: "ENCOUNTER_END" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         encounterId: args[2],
         encounterName: args[3],
@@ -509,7 +509,7 @@ function ENCOUNTER_START(args: string[], extra: any) {
         // discrimination work later. 
         event: "ENCOUNTER_START" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         encounterId: args[2],
         encounterName: args[3],
@@ -533,7 +533,7 @@ function ENVIRONMENTAL_DAMAGE(args: string[], extra: any) {
         // discrimination work later. 
         event: "ENVIRONMENTAL_DAMAGE" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-37
         ...baseUnitProperties,
@@ -550,7 +550,7 @@ function MAP_CHANGE(args: string[], extra: any) {
         // discrimination work later. 
         event: "MAP_CHANGE" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         uiMapId: args[2],
         uiMapName: args[3],
@@ -571,7 +571,7 @@ function PARTY_KILL(args: string[], extra: any) {
         // discrimination work later. 
         event: "PARTY_KILL" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-9
         ...baseUnitProperties,
@@ -597,7 +597,7 @@ function RANGE_DAMAGE(args: string[], extra: any) {
         // discrimination work later. 
         event: "RANGE_DAMAGE" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-39
         ...baseUnitProperties,
@@ -621,7 +621,7 @@ function RANGE_MISSED(args: string[], extra: any) {
         // discrimination work later. 
         event: "RANGE_MISSED" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-17
         ...baseUnitProperties,
@@ -678,7 +678,7 @@ function SPELL_ABSORBED(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_ABSORBED" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellAbsorbedProperties,
@@ -697,7 +697,7 @@ function SPELL_AURA_APPLIED_DOSE(args: string[], extra: any) {
         event: "SPELL_AURA_APPLIED_DOSE" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -718,7 +718,7 @@ function SPELL_AURA_APPLIED(args: string[], extra: any) {
         event: "SPELL_AURA_APPLIED" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -740,7 +740,7 @@ function SPELL_AURA_BROKEN_SPELL(args: string[], extra: any) {
         event: "SPELL_AURA_BROKEN_SPELL" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -765,7 +765,7 @@ function SPELL_AURA_BROKEN(args: string[], extra: any) {
         event: "SPELL_AURA_BROKEN" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -786,7 +786,7 @@ function SPELL_AURA_REFRESH(args: string[], extra: any) {
         event: "SPELL_AURA_REFRESH" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -808,7 +808,7 @@ function SPELL_AURA_REMOVED_DOSE(args: string[], extra: any) {
         event: "SPELL_AURA_REMOVED_DOSE" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -829,7 +829,7 @@ function SPELL_AURA_REMOVED(args: string[], extra: any) {
         event: "SPELL_AURA_REMOVED" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -850,7 +850,7 @@ function SPELL_CREATE(args: string[], extra: any) {
         event: "SPELL_CREATE" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -872,7 +872,7 @@ function SPELL_CAST_FAILED(args: string[], extra: any) {
         event: "SPELL_CAST_FAILED" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -893,7 +893,7 @@ function SPELL_CAST_START(args: string[], extra: any) {
         event: "SPELL_CAST_START" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -914,7 +914,7 @@ function SPELL_CAST_SUCCESS(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_CAST_SUCCESS" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-29
         ...baseUnitProperties,
@@ -938,7 +938,7 @@ function SPELL_DAMAGE(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_DAMAGE" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-39
         ...baseUnitProperties,
@@ -961,7 +961,7 @@ function SPELL_DRAIN(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_DRAIN" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-29
         ...baseUnitProperties,
@@ -988,7 +988,7 @@ function SPELL_LEECH(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_LEECH" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-29
         ...baseUnitProperties,
@@ -1013,7 +1013,7 @@ function SPELL_DISPEL(args: string[], extra: any) {
         event: "SPELL_DISPEL" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -1039,7 +1039,7 @@ function SPELL_ENERGIZE(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_ENERGIZE" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-29
         ...baseUnitProperties,
@@ -1065,7 +1065,7 @@ function SPELL_EXTRA_ATTACKS(args: string[], extra: any) {
         event: "SPELL_EXTRA_ATTACKS" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -1087,7 +1087,7 @@ function SPELL_HEAL_ABSORBED(args: string[], extra: any) {
         event: "SPELL_HEAL_ABSORBED" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -1120,7 +1120,7 @@ function SPELL_HEAL(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_HEAL" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-34
         ...baseUnitProperties,
@@ -1142,7 +1142,7 @@ function SPELL_INSTAKILL(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_INSTAKILL" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-12
         ...baseUnitProperties,
@@ -1166,7 +1166,7 @@ function SPELL_INTERRUPT(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_INTERRUPT" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-12
         ...baseUnitProperties,
@@ -1193,7 +1193,7 @@ function SPELL_MISSED(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_MISSED" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-17
         ...baseUnitProperties,
@@ -1217,7 +1217,7 @@ function SPELL_PERIODIC_DAMAGE(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_PERIODIC_DAMAGE" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-39
         ...baseUnitProperties,
@@ -1240,7 +1240,7 @@ function SPELL_PERIODIC_ENERGIZE(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_PERIODIC_ENERGIZE" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-29
         ...baseUnitProperties,
@@ -1269,7 +1269,7 @@ function SPELL_PERIODIC_HEAL(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_PERIODIC_HEAL" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-34
         ...baseUnitProperties,
@@ -1293,7 +1293,7 @@ function SPELL_PERIODIC_MISSED(args: string[], extra: any) {
         // discrimination work later. 
         event: "SPELL_PERIODIC_MISSED" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-17
         ...baseUnitProperties,
@@ -1314,7 +1314,7 @@ function SPELL_RESURRECT(args: string[], extra: any) {
         event: "SPELL_RESURRECT" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -1334,7 +1334,7 @@ function SPELL_SUMMON(args: string[], extra: any) {
         event: "SPELL_SUMMON" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -1354,7 +1354,7 @@ function SPELL_STOLEN(args: string[], extra: any) {
         event: "SPELL_STOLEN" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -1380,7 +1380,7 @@ function SWING_DAMAGE_LANDED(args: string[], extra: any) {
         // discrimination work later. 
         event: "SWING_DAMAGE_LANDED" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-36
         ...baseUnitProperties,
@@ -1402,7 +1402,7 @@ function SWING_DAMAGE(args: string[], extra: any) {
         // discrimination work later. 
         event: "SWING_DAMAGE" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-36
         ...baseUnitProperties,
@@ -1423,7 +1423,7 @@ function SWING_MISSED(args: string[], extra: any) {
         // discrimination work later. 
         event: "SWING_MISSED" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-14
         ...baseUnitProperties,
@@ -1441,7 +1441,7 @@ function UNIT_DESTROYED(args: string[], extra: any) {
         // discrimination work later. 
         event: "UNIT_DESTROYED" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-9
         ...baseUnitProperties,
@@ -1462,7 +1462,7 @@ function UNIT_DIED(args: string[], extra: any) {
         // discrimination work later. 
         event: "UNIT_DIED" as const,
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         // args2-9
         ...baseUnitProperties,
@@ -1481,7 +1481,7 @@ function WORLD_MARKER_PLACED(args: string[], extra: any) {
         event: "WORLD_MARKER_PLACED" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
         instanceId: args[2],
         marker: args[3],
         x: args[4],
@@ -1497,7 +1497,7 @@ function WORLD_MARKER_REMOVED(args: string[], extra: any) {
         event: "WORLD_MARKER_REMOVED" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
         marker: args[2]
     }
 }
@@ -1510,7 +1510,7 @@ function ZONE_CHANGE(args: string[], extra: any) {
         event: "ZONE_CHANGE" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
         instanceId: args[2],
         zoneName: args[3],
         difficultyId: args[4],
@@ -1529,7 +1529,7 @@ function SPELL_EMPOWER_START(args: string[], extra: any) {
         event: "SPELL_EMPOWER_START" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -1549,7 +1549,7 @@ function SPELL_EMPOWER_END(args: string[], extra: any) {
         event: "SPELL_EMPOWER_END" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
@@ -1571,7 +1571,7 @@ function SPELL_EMPOWER_INTERRUPT(args: string[], extra: any) {
         event: "SPELL_EMPOWER_INTERRUPT" as const,
 
         date: args[0],
-        timestamp: `${extra.encounterTimeMs}`,
+        timestamp: extra.encounterTimeMs,
 
         ...baseUnitProperties,
         ...spellPrefixProperties,
