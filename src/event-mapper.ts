@@ -607,7 +607,11 @@ export class EventMapper {
 
         switch (event) {
             case EVENTS.ENCHANT_APPLIED:
-                return;
+                return {
+                    ...baseEvent,
+                    ...baseUnitEvent,
+                    event: "ENCHANT_APPLIED",
+                };
             case EVENTS.ENCHANT_REMOVED:
                 return;
             case EVENTS.COMBATANT_INFO:
