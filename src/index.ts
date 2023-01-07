@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { EventLine, EventMapper, EVENTS } from './event-mapper'
+import { EventMapper} from './event-mapper'
 import { LogParser } from './log-parser'
 
 const file = process.argv[2]
@@ -13,7 +13,7 @@ async function main() {
     const eventMapper = new EventMapper()
     const logParser = new LogParser<EventLine>({
         mapper: (line) => {
-            return eventMapper.filteredMap(line)
+            return eventMapper.map(line)
         }
     })
     const out: EventLine[] = []
