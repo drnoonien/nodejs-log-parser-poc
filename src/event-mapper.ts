@@ -221,6 +221,13 @@ function assertAlwaysNilOrZero(args: any[], index: number) {
     return arg
 }
 
+function maybefy(arg: any): any | undefined {
+    if (arg === undefined) {
+        return null
+    } else {
+        return arg
+    }
+}
 
 function extractBaseUnitProperties(args: string[], index: number) {
     return {
@@ -376,7 +383,7 @@ function COMBAT_LOG_VERSION(args: string[], extra: any) {
     }
 }
 function COMBATANT_INFO(args: string[], extra: any) {
-    assertArgLen(args, 35)
+    assertArgLen(args, 34)
 
     return {
         // This 'as const' is the magic keyword that makes
@@ -678,7 +685,7 @@ function SPELL_ABSORBED(args: string[], extra: any) {
     }
 }
 function SPELL_AURA_APPLIED_DOSE(args: string[], extra: any) {
-    assertArgLen(args, 15)
+    assertArgLen(args, 14,15)
 
     // args2-9
     let baseUnitProperties = extractBaseUnitProperties(args, 2)
@@ -695,11 +702,11 @@ function SPELL_AURA_APPLIED_DOSE(args: string[], extra: any) {
         ...baseUnitProperties,
         ...spellPrefixProperties,
         auraType: args[13],
-        amount: args[14],
+        amount: maybefy(args[14])
     }
 }
 function SPELL_AURA_APPLIED(args: string[], extra: any) {
-    assertArgLen(args, 15)
+    assertArgLen(args, 14,15)
 
     // args2-9
     let baseUnitProperties = extractBaseUnitProperties(args, 2)
@@ -716,7 +723,7 @@ function SPELL_AURA_APPLIED(args: string[], extra: any) {
         ...baseUnitProperties,
         ...spellPrefixProperties,
         auraType: args[13],
-        amount: args[14],
+        amount: maybefy(args[14])
 
     }
 }
@@ -767,7 +774,7 @@ function SPELL_AURA_BROKEN(args: string[], extra: any) {
     }
 }
 function SPELL_AURA_REFRESH(args: string[], extra: any) {
-    assertArgLen(args, 14)
+    assertArgLen(args, 14,15)
 
     // args2-9
     let baseUnitProperties = extractBaseUnitProperties(args, 2)
@@ -784,11 +791,12 @@ function SPELL_AURA_REFRESH(args: string[], extra: any) {
         ...baseUnitProperties,
         ...spellPrefixProperties,
         auraType: args[13],
+        amount: maybefy(args[14])
 
     }
 }
 function SPELL_AURA_REMOVED_DOSE(args: string[], extra: any) {
-    assertArgLen(args, 15)
+    assertArgLen(args, 14,15)
 
     // args2-9
     let baseUnitProperties = extractBaseUnitProperties(args, 2)
@@ -805,13 +813,12 @@ function SPELL_AURA_REMOVED_DOSE(args: string[], extra: any) {
         ...baseUnitProperties,
         ...spellPrefixProperties,
         auraType: args[13],
-        amount: args[14],
+        amount: maybefy(args[14])
 
     }
 }
 function SPELL_AURA_REMOVED(args: string[], extra: any) {
-    assertArgLen(args, 15)
-
+    assertArgLen(args, 14,15)
     // args2-9
     let baseUnitProperties = extractBaseUnitProperties(args, 2)
     // args10-12
@@ -827,8 +834,7 @@ function SPELL_AURA_REMOVED(args: string[], extra: any) {
         ...baseUnitProperties,
         ...spellPrefixProperties,
         auraType: args[13],
-        amount: args[14],
-
+        amount: maybefy(args[14])
     }
 }
 function SPELL_CREATE(args: string[], extra: any) {
