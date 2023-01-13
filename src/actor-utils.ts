@@ -93,17 +93,18 @@ function range(lowerBound: number, upperBound: number): number[] {
     return intRange;
 }
 
+function makePoint(x:number,y:number,timestamp:number): PointXYT {
+    return {
+        x: x,
+        y: y,
+        timestamp: timestamp,
+        realPoint: false,
+    }
+}
+
 function generateStaticPosition(staticPoint: PointXYT, timeRange: number[]): PointXYT[] {
     let staticPointList: PointXYT[] = [];
-    timeRange.forEach(timestamp => {
-        staticPointList.push({
-            x: staticPoint.x,
-            y: staticPoint.y,
-            timestamp: timestamp,
-            realPoint: false,
-        })
-    })
-
+    staticPointList = Array.from(timeRange, (x, i) => makePoint(staticPoint.x, staticPoint.y, x))
     return staticPointList;
 }
 
