@@ -372,6 +372,7 @@ function COMBAT_LOG_VERSION(args: string[], extra: any) {
 
         date: args[0],
         timestamp: extra.encounterTimeMs,
+
         combatLogVersionKey: args[1],
         combatLogVersionValue: args[2],
         advancedCombatLogEnabledKey: args[3],
@@ -948,7 +949,7 @@ function SPELL_DAMAGE(args: string[], extra: any) {
     }
 }
 function SPELL_DRAIN(args: string[], extra: any) {
-    assertArgLen(args, 35)
+    assertArgLen(args, 34)
     // args2-9
     let baseUnitProperties = extractBaseUnitProperties(args, 2)
     // args10-12
